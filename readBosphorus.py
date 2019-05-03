@@ -2,41 +2,37 @@ import struct
 from array import array
 import numpy as np
 
-datasetlocation = "C:/Users/Lukas/Desktop/code/Bosphorus/data/"
+# reads a BNT file
+# returns num rows, num cols, zmin value, image filename, data as np array
+def readBNTFile(filepath):
+    with open(filepath, "rb") as f:
+        nrows, = struct.unpack('H', f.read(2))
+        ncols, = struct.unpack('H', f.read(2))
+        zmin, = struct.unpack('d', f.read(8))
 
-filepath = datasetlocation + "bs000/bs000_CAU_A22A25_0.bnt"
+        str_len, = struct.unpack('H', f.read(2))
+        b = f.read(str_len)
+        imfile = b.decode("utf-8")
 
-with open(filepath, "rb") as f:
-    # nrows = fread(fid, 1, 'uint16');
-    # ncols = fread(fid, 1, 'uint16');
-    # zmin = fread(fid, 1, 'float64');
+        data_len, = struct.unpack('I', f.read(4))
+        data = array('d')
+        data.fromfile(f, data_len)
+        data = np.asarray(data, dtype='double')
+        data = data.reshape((5,data_len//5)).T
 
-    # len = fread(fid, 1, 'uint16');
-    # imfile = fread(fid, [1 len], 'uint8=>char');
+        if not nrows * ncols == data.shape[0]:
+            # something went wrong
+            raise Exception("Error reading bnt file "+ filepath + "\nnrows * ncols does not match data size")
 
-    # % normally, size of data must be nrows*ncols*5
-    # len = fread(fid, 1, 'uint32');
-    # data = fread(fid, [len/5 5], 'float64');
-
-    nrows, = struct.unpack('H', f.read(2))
-    ncols, = struct.unpack('H', f.read(2))
-    zmin, = struct.unpack('d', f.read(8))
-
-    str_len, = struct.unpack('H', f.read(2))
-    b = f.read(str_len)
-    imfile = b.decode("utf-8")
-    
-    data_len, = struct.unpack('I', f.read(4))
-    data = array('d')
-    data.fromfile(f, data_len)
-    data = np.asarray(data, dtype='double')
-    data = data.reshape((5,data_len//5)).T
+        return nrows, ncols, zmin, imfile, data
 
 
-    print(nrows, ncols, zmin)
-    print(str_len)
-    print(imfile)
+def main():
+    datasetlocation = "C:/Users/Lukas/Desktop/code/Bosphorus/data/"
+    filepath = datasetlocation + "bs000/bs000_CAU_A22A25_0.bnt"
+    nrows, ncols, zmin, imfile, data = readBNTFile(filepath)
 
-    print(data_len)
-    #print(data.shape)
-    print(data[-1])
+
+
+if __name__ == "__main__":
+    main()
