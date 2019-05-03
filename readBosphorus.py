@@ -1,6 +1,7 @@
 import struct
 from array import array
 import numpy as np
+import os
 
 # reads a BNT file
 # returns num rows, num cols, zmin value, image filename, data as np array
@@ -27,10 +28,20 @@ def readBNTFile(filepath):
         return nrows, ncols, zmin, imfile, data
 
 
+def readLM2File(filepath):
+    with open(filepath, "r") as f:
+        pass
+
 def main():
     datasetlocation = "C:/Users/Lukas/Desktop/code/Bosphorus/data/"
-    filepath = datasetlocation + "bs000/bs000_CAU_A22A25_0.bnt"
-    nrows, ncols, zmin, imfile, data = readBNTFile(filepath)
+    filepath = datasetlocation + "bs000/bs000_CAU_A22A25_0.lm2"
+    #readLM2File(filepath)
+
+    for dirpath, dirnames, filenames in os.walk(datasetlocation):
+        for f in filenames:
+            if f.endswith(".bnt"):
+                nrows, ncols, zmin, imfile, data = readBNTFile(dirpath + "/" + f)
+                print(imfile)
 
 
 
