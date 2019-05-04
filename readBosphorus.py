@@ -28,21 +28,44 @@ def readBNTFile(filepath):
         return nrows, ncols, zmin, imfile, data
 
 
+# reads a LM2 file
+# returns points array with 2D landmark positions and label names
 def readLM2File(filepath):
     with open(filepath, "r") as f:
-        pass
+        f.readline()
+        f.readline()
+
+        line = f.readline().strip()
+        numLandmarks = int(line.split(" ")[0])
+
+        f.readline()
+        f.readline()
+
+        labels = []
+        for _ in range(numLandmarks):
+            labels.append(f.readline().strip())
+
+        f.readline()
+        f.readline()
+
+        points = []
+        for _ in range(numLandmarks):
+            parts = f.readline().strip().split(" ")
+            points.append([float(parts[0]), float(parts[1])])
+
+        points = np.asarray(points, dtype="double")
+
+        return points, labels
 
 def main():
     datasetlocation = "C:/Users/Lukas/Desktop/code/Bosphorus/data/"
     filepath = datasetlocation + "bs000/bs000_CAU_A22A25_0.lm2"
-    #readLM2File(filepath)
 
     for dirpath, dirnames, filenames in os.walk(datasetlocation):
         for f in filenames:
-            if f.endswith(".bnt"):
-                nrows, ncols, zmin, imfile, data = readBNTFile(dirpath + "/" + f)
-                print(imfile)
-
+            if f.endswith(".lm2"):
+                points, labels = readLM2File(dirpath + "/" + f)
+                print(points.shape)
 
 
 if __name__ == "__main__":
