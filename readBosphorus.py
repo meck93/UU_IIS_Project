@@ -73,13 +73,23 @@ def makeIndex(datasetlocation):
     return ids
 
 
+# visualize the image data and depth information of one sample
 def visualizeSample(id):
     nrows, ncols, zmin, imfile, data = readBNTFile(id+".bnt")
     points, labels = readLM2File(id+".lm2")
     image = io.imread(id+".png")
+
     plt.figure()
+    plt.subplot(1, 2, 1)
     plt.title(id.split("/")[-1])
     plt.imshow(image)
+
+    plt.subplot(1, 2, 2)
+    depth = data[:,2]
+    depth = depth.reshape((nrows, ncols))
+    depth = np.flip(depth, 0)
+    depth[depth == zmin] = np.nan # replace background values with nan
+    plt.imshow(depth, cmap='gray', vmin=np.nanmin(depth), vmax=np.nanmax(depth))
     plt.show()
 
 
