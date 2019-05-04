@@ -3,6 +3,7 @@ from array import array
 import numpy as np
 import os
 
+
 # reads a BNT file
 # returns num rows, num cols, zmin value, image filename, data as np array
 def readBNTFile(filepath):
@@ -57,15 +58,23 @@ def readLM2File(filepath):
 
         return points, labels
 
-def main():
-    datasetlocation = "C:/Users/Lukas/Desktop/code/Bosphorus/data/"
-    filepath = datasetlocation + "bs000/bs000_CAU_A22A25_0.lm2"
 
+# return a list of IDs of all samples in the dataset.
+# an ID is a full path to the sample without the file extension
+def makeIndex(datasetlocation):
+    ids = []
     for dirpath, dirnames, filenames in os.walk(datasetlocation):
         for f in filenames:
             if f.endswith(".lm2"):
-                points, labels = readLM2File(dirpath + "/" + f)
-                print(points.shape)
+                ids.append(dirpath + "/" + f[:-4])
+    return ids
+
+
+def main():
+    datasetlocation = "C:/Users/Lukas/Desktop/code/Bosphorus/data/"
+
+    index = makeIndex(datasetlocation)
+    print(len(index))
 
 
 if __name__ == "__main__":
