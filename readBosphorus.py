@@ -2,6 +2,9 @@ import struct
 from array import array
 import numpy as np
 import os
+import matplotlib.pyplot as plt
+from skimage import io
+import random
 
 
 # reads a BNT file
@@ -70,11 +73,22 @@ def makeIndex(datasetlocation):
     return ids
 
 
+def visualizeSample(id):
+    nrows, ncols, zmin, imfile, data = readBNTFile(id+".bnt")
+    points, labels = readLM2File(id+".lm2")
+    image = io.imread(id+".png")
+    plt.figure()
+    plt.title(id.split("/")[-1])
+    plt.imshow(image)
+    plt.show()
+
+
 def main():
     datasetlocation = "C:/Users/Lukas/Desktop/code/Bosphorus/data/"
 
     index = makeIndex(datasetlocation)
-    print(len(index))
+    while True:
+        visualizeSample(random.choice(index))
 
 
 if __name__ == "__main__":
