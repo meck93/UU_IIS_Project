@@ -23,11 +23,11 @@ def readBNTFile(filepath):
         data = array('d')
         data.fromfile(f, data_len)
         data = np.asarray(data, dtype='double')
-        data = data.reshape((5,data_len//5)).T
+        data = data.reshape((5, data_len//5)).T
 
         if not nrows * ncols == data.shape[0]:
             # something went wrong
-            raise Exception("Error reading bnt file "+ filepath + "\nnrows * ncols does not match data size")
+            raise Exception("Error reading bnt file " + filepath + "\nnrows * ncols does not match data size")
 
         return nrows, ncols, zmin, imfile, data
 
@@ -74,29 +74,40 @@ def makeIndex(datasetlocation):
 
 
 # visualize the image data and depth information of one sample
-def visualizeSample(id):
+def visualizeSample(id, plot_landmarks=True, annotate_landmarks=True):
     nrows, ncols, zmin, imfile, data = readBNTFile(id+".bnt")
     points, labels = readLM2File(id+".lm2")
     image = io.imread(id+".png")
 
+    # plot the RGB image
     plt.figure()
     plt.subplot(1, 2, 1)
     plt.title(id.split("/")[-1])
     plt.imshow(image)
 
+    if plot_landmarks:  # plot facial landmarks as points
+        plt.scatter(points[:, 0], points[:, 1], s=20, c="red", alpha=1.0, edgecolor='black')
+
+    if annotate_landmarks:  # annotate each landmark with its label
+        for i, label in enumerate(labels):
+            plt.annotate(label, (points[i, 0], points[i, 1]), color="white", fontsize="large")
+
+    # plot the depth data
     plt.subplot(1, 2, 2)
-    depth = data[:,2]
+    depth = data[:, 2]
     depth = depth.reshape((nrows, ncols))
     depth = np.flip(depth, 0)
-    depth[depth == zmin] = np.nan # replace background values with nan
+    depth[depth == zmin] = np.nan  # replace background values with nan
     plt.imshow(depth, cmap='gray', vmin=np.nanmin(depth), vmax=np.nanmax(depth))
     plt.show()
 
 
 def main():
-    datasetlocation = "C:/Users/Lukas/Desktop/code/Bosphorus/data/"
+    datasetlocation = "../datasets/bosphorus/data/"
+    filepath = datasetlocation + "bs000/bs000_CAU_A22A25_0.lm2"
 
     index = makeIndex(datasetlocation)
+
     while True:
         visualizeSample(random.choice(index))
 
