@@ -5,7 +5,8 @@ import os
 import matplotlib.pyplot as plt
 from skimage import io
 import random
-
+import cv2 as cv
+from .constants import FACIAL_LANDMARKS
 
 # reads a BNT file
 # returns num rows, num cols, zmin value, image filename, data as np array
@@ -69,8 +70,50 @@ def makeIndex(datasetlocation):
     for dirpath, dirnames, filenames in os.walk(datasetlocation):
         for f in filenames:
             if f.endswith(".lm2"):
-                ids.append(dirpath + "/" + f[:-4])
+                _, labels = readLM2File(dirpath + "/" + f)
+                # filter out rotations:
+                if "_YR_" not in f and "_PR_" not in f and "_CR_" not in f:
+                    # filter out samples that do not contain all used features
+                    incomplete = False
+                    for l in FACIAL_LANDMARKS:
+                        if l not in labels:
+                            incomplete = True
+                    if not incomplete:
+                        ids.append(dirpath + "/" + f[:-4])
     return ids
+
+
+def getFeatureVector(id):
+    nrows, ncols, zmin, imfile, data = readBNTFile(id+".bnt")
+    points, labels = readLM2File(id+".lm2")
+    image = cv.imread(id+".png")
+    depth = data[:,2]
+    depth = depth.reshape((nrows, ncols))
+    depth = np.flip(depth, 0)
+    gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+
+    im = cv.resize(gray, (128,128))
+    im = np.asarray(im, dtype="float")
+    im /= 255.0
+
+    depth[depth == zmin] = np.nan
+    depth_min = np.nanmin(depth)
+    depth_max = np.nanmax(depth)
+    depth = (depth - depth_min) / (depth_max - depth_min)
+    depth = np.nan_to_num(depth)
+
+    dep = cv.resize(depth, (128,128))
+
+    x = [im, dep]
+    x = np.asarray(x, dtype='float')
+
+    y = []
+
+    for l in FACIAL_LANDMARKS:
+        pos = labels.index(l)
+        y.append(points[pos])
+
+    return x, y
 
 
 # visualize the image data and depth information of one sample
