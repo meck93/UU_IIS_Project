@@ -1,3 +1,10 @@
+# our stuff
+datasets/
+.vscode
+!datasets/test_annotation
+!datasets/test_annotation/*
+!datasets/test_annotation/**/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
