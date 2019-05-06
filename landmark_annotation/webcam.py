@@ -10,7 +10,7 @@ def main():
     cv2.namedWindow("WebCam-Facial-Landmarks")
 
     # run the 2D face alignment on a test image, without CUDA.
-    fa = face_alignment.FaceAlignment(face_alignment.LandmarksType._2D, device='cuda', flip_input=True)
+    fa = face_alignment.FaceAlignment(face_alignment.LandmarksType._2D, device='cuda', face_detector='sfd', flip_input=True)
 
     # camera caputre object
     cam = cv2.VideoCapture(0)
@@ -22,13 +22,18 @@ def main():
             print("Could not get a frame from the camera, exiting.")
             break
 
-        # get the facial landmarks  
-        landmarks = fa.get_landmarks(frame)[-1]
+        # try to get the landmarks for all faces
+        landmark_set = fa.get_landmarks(frame)
 
-        # loop over the (x, y)-coordinates for the facial landmarks
-		# and draw them as black circles on the image
-        for (x, y) in landmarks:
-            cv2.circle(frame, (x, y), 1, (0, 0, 0), -1)
+        # if no face is detected, skip the annotating part
+        if not landmark_set:
+            continue
+
+        for landmarks in landmark_set:
+            # loop over the (x, y)-coordinates for the facial landmarks
+            # and draw them as red circles on the image
+            for (x, y) in landmarks:
+                cv2.circle(frame, (x, y), 1, (0, 0, 255), -1)
 
         # display the final image
         cv2.imshow("WebCam-Facial-Landmarks", frame)
