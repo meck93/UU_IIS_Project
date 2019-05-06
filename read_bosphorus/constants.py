@@ -1,13 +1,13 @@
 # 22 features used (of the bosphorus dataset)
-features = ['Outer left eyebrow', 'Middle left eyebrow', 'Inner left eyebrow', 'Inner right eyebrow', 'Middle right eyebrow', 'Outer right eyebrow',
-            'Outer left eye corner', 'Inner left eye corner', 'Inner right eye corner', 'Outer right eye corner',
-            'Nose saddle left', 'Nose saddle right', 'Left nose peak', 'Nose tip', 'Right nose peak', 'Left mouth corner',
-            'Upper lip outer middle', 'Right mouth corner', 'Upper lip inner middle', 'Lower lip inner middle', 'Lower lip outer middle', 'Chin middle']
+FACIAL_LANDMARKS = ['Outer left eyebrow', 'Middle left eyebrow', 'Inner left eyebrow', 'Inner right eyebrow', 'Middle right eyebrow', 'Outer right eyebrow',
+                    'Outer left eye corner', 'Inner left eye corner', 'Inner right eye corner', 'Outer right eye corner',
+                    'Nose saddle left', 'Nose saddle right', 'Left nose peak', 'Nose tip', 'Right nose peak', 'Left mouth corner',
+                    'Upper lip outer middle', 'Right mouth corner', 'Upper lip inner middle', 'Lower lip inner middle', 'Lower lip outer middle', 'Chin middle']
 
 # maps the features (bosphorus dataset) to the index of the landmark in our test dataset,
 # # annoation method for test dataset by Adrian Bulat: https://github.com/1adrianb/face-alignment
 # # index: 0-67, None = the feature in the bosphorus dataset doesn't exist in our annotation method
-feature_mapping = {
+LANDMARK_MAPPING = {
     'Chin middle': 8,
     'Inner left eye corner': 39,
     'Inner left eyebrow': 21,

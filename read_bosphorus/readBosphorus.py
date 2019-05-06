@@ -106,13 +106,10 @@ def main():
     datasetlocation = "../datasets/bosphorus/data/"
     filepath = datasetlocation + "bs000/bs000_CAU_A22A25_0.lm2"
 
-    for dirpath, dirnames, filenames in os.walk(datasetlocation):
-        for f in filenames:
-            if f.endswith(".lm2"):
-                points, labels = readLM2File(dirpath + "/" + f)
+    index = makeIndex(datasetlocation)
 
-    ids = makeIndex(datasetlocation)
-    visualizeSample(ids[0])
+    while True:
+        visualizeSample(random.choice(index))
 
 
 if __name__ == "__main__":
