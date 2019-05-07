@@ -108,3 +108,5 @@ dataset2/
 *.jpg
 *.csv
 *.npz
+own_dataset/
+solutions/
