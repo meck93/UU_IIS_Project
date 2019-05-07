@@ -60,7 +60,7 @@ def getDataset():
         pass
 
     print("Creating dataset...")
-    index = readBosphorus.makeIndex()[:500]
+    index = readBosphorus.makeIndex()
     X = []
     y = []
     for i, elem in enumerate(index):
