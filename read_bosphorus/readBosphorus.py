@@ -65,7 +65,7 @@ def readLM2File(filepath):
 
 # return a list of IDs of all samples in the dataset.
 # an ID is a full path to the sample without the file extension
-def makeIndex(datasetlocation):
+def makeIndex(datasetlocation="./datasets/bosphorus/data/"):
     ids = []
     for dirpath, dirnames, filenames in os.walk(datasetlocation):
         for f in filenames:
@@ -111,7 +111,14 @@ def getFeatureVector(id):
 
     for l in FACIAL_LANDMARKS:
         pos = labels.index(l)
-        y.append(points[pos])
+        p = points[pos]
+        p[0] = p[0] / gray.shape[1]
+        p[1] = p[1] / gray.shape[0]
+        y.append(p)
+
+
+    y = np.asarray(y, dtype='float')
+    y = y.flatten()
 
     return x, y
 
