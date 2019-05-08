@@ -9,8 +9,10 @@ import matplotlib.pyplot as plt
 import random
 from sklearn.model_selection import train_test_split
 import keras.backend as K
+import cv2 as cv
 
 
+# calculate the average distance between the true points and the predicted points
 def metric_avg_distance(y_true, y_pred):
     K.reshape(y_true, (22,2))
     K.reshape(y_pred, (22,2))
@@ -66,10 +68,9 @@ def getDataset():
     for i, elem in enumerate(index):
         if i % 10 == 0:
             print("{:d}/{:d}".format(i, len(index)))
-        x, y_ = readBosphorus.getFeatureVector(elem)
+        x, y_ = getFeatureVector(elem)
         X.append(x)
         y.append(y_)
-        #visualize(x, y_, annotate_landmarks=True)
 
     X = np.asarray(X)
     y = np.asarray(y)
@@ -78,6 +79,46 @@ def getDataset():
     np.save(datasetlocation+"_y.npy", y)
 
     return X, y
+
+
+def getFeatureVector(id):
+    nrows, ncols, zmin, imfile, data = readBosphorus.readBNTFile(id+".bnt")
+    points, labels = readBosphorus.readLM2File(id+".lm2")
+    image = cv.imread(id+".png")
+    depth = data[:,2]
+    depth = depth.reshape((nrows, ncols))
+    depth = np.flip(depth, 0)
+    gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+
+    im = cv.resize(gray, (128,128))
+    im = np.asarray(im, dtype="float")
+    im /= 255.0
+
+    depth[depth == zmin] = np.nan
+    depth_min = np.nanmin(depth)
+    depth_max = np.nanmax(depth)
+    depth = (depth - depth_min) / (depth_max - depth_min)
+    depth = np.nan_to_num(depth)
+
+    dep = cv.resize(depth, (128,128))
+
+    x = [im, dep]
+    x = np.asarray(x, dtype='float')
+
+    y = []
+
+    for l in FACIAL_LANDMARKS:
+        pos = labels.index(l)
+        p = points[pos]
+        p[0] = p[0] / gray.shape[1]
+        p[1] = p[1] / gray.shape[0]
+        y.append(p)
+
+
+    y = np.asarray(y, dtype='float')
+    y = y.flatten()
+
+    return x, y
 
 
 def visualize(x, y, plot_landmarks=True, annotate_landmarks=True):
