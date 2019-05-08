@@ -5,7 +5,7 @@ import os
 import matplotlib.pyplot as plt
 from skimage import io
 import random
-
+from .constants import FACIAL_LANDMARKS
 
 # reads a BNT file
 # returns num rows, num cols, zmin value, image filename, data as np array
@@ -64,12 +64,21 @@ def readLM2File(filepath):
 
 # return a list of IDs of all samples in the dataset.
 # an ID is a full path to the sample without the file extension
-def makeIndex(datasetlocation):
+def makeIndex(datasetlocation="./datasets/bosphorus/data/"):
     ids = []
     for dirpath, dirnames, filenames in os.walk(datasetlocation):
         for f in filenames:
             if f.endswith(".lm2"):
-                ids.append(dirpath + "/" + f[:-4])
+                _, labels = readLM2File(dirpath + "/" + f)
+                # filter out rotations:
+                if "_YR_" not in f and "_PR_" not in f and "_CR_" not in f:
+                    # filter out samples that do not contain all used features
+                    incomplete = False
+                    for l in FACIAL_LANDMARKS:
+                        if l not in labels:
+                            incomplete = True
+                    if not incomplete:
+                        ids.append(dirpath + "/" + f[:-4])
     return ids
 
 
