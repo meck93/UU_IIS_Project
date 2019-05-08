@@ -10,6 +10,7 @@ import random
 from sklearn.model_selection import train_test_split
 import keras.backend as K
 import cv2 as cv
+from keras.callbacks import TensorBoard
 
 
 # calculate the average distance between the true points and the predicted points
@@ -46,7 +47,7 @@ def getModel():
     model.add(Dense(90, activation="relu"))
     model.add(Dense(44))
 
-    model.compile(optimizer="rmsprop", loss="mse", metrics=["acc"])
+    model.compile(optimizer=keras.optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True), loss="mse", metrics=["acc"])
 
     print(model.summary())
     return model
@@ -153,14 +154,16 @@ def main():
     print(y_train.shape)
     print(y_test.shape)
 
-    model.fit(X_train, y_train, verbose=True, validation_data=(X_test, y_test), epochs=1)
+    tensorboard = TensorBoard(update_freq='batch')
+
+    model.fit(X_train, y_train, verbose=True, validation_data=(X_test, y_test), epochs=4, callbacks=[tensorboard])
     model.save("network.hdf5")
 
     while True:
         i = random.randint(0, X_test.shape[0]-1)
         y_pred = model.predict(np.asarray([X_test[i]]))
-        visualize(X_test[i], y_pred)
-        visualize(X_test[i], y_test[i])
+        visualize(X_test[i], y_pred, annotate_landmarks=False)
+        visualize(X_test[i], y_test[i], annotate_landmarks=False)
 
 
 
