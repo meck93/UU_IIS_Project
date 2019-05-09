@@ -1,3 +1,8 @@
 numpy
 matplotlib
 scikit-image
+tensorflow
+keras
+opencv-python
+pyrealsense2
+face-alignment

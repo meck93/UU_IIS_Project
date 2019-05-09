@@ -8,7 +8,7 @@ from record_dataset.source import RealSenseCam
 import matplotlib.pyplot as plt
 
 def main():
-    fa = face_alignment.FaceAlignment(face_alignment.LandmarksType._2D, device='cpu', flip_input=True)
+    #fa = face_alignment.FaceAlignment(face_alignment.LandmarksType._2D, device='cpu', flip_input=True)
     source = RealSenseCam()
 
     ax1 = plt.subplot(1, 3, 1)
