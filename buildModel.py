@@ -1,53 +1,71 @@
+import random
+
 import keras
-from keras.models import Sequential
-from keras.layers import Dense, Conv2D, Activation, MaxPooling2D, BatchNormalization, GlobalAveragePooling2D, Flatten
-from keras.callbacks import ModelCheckpoint
+import keras.backend as K
+import matplotlib.pyplot as plt
 import numpy as np
+from keras.callbacks import ModelCheckpoint, TensorBoard
+from keras.layers import (Activation, BatchNormalization, Conv2D, Dense,
+                          Dropout, Flatten, GlobalAveragePooling2D,
+                          MaxPooling2D)
+from keras.models import Sequential
+from sklearn.model_selection import train_test_split
+
+import cv2 as cv
 from read_bosphorus import readBosphorus
 from read_bosphorus.constants import FACIAL_LANDMARKS
-import matplotlib.pyplot as plt
-import random
-from sklearn.model_selection import train_test_split
-import keras.backend as K
-import cv2 as cv
-from keras.callbacks import TensorBoard
 
 
 # calculate the average distance between the true points and the predicted points
-def metric_avg_distance(y_true, y_pred):
-    K.reshape(y_true, (22,2))
-    K.reshape(y_pred, (22,2))
-    avg = 0
-    for i in range(22):
-        avg += K.l2_normalize(y_true[i] - y_pred[i])
-    avg /= 22.0
-    return avg
+def mean_euclidean_dist(y_true, y_pred):
+    dim = K.constant(y_pred.shape[0]//2, dtype="int32")
+    print(dim, K.eval(dim))
+    dim2 = K.constant(2, dtype="int32")
+    print(dim2, K.eval(dim2))
+    y_true = K.reshape(y_true, (dim, dim2))
+    y_pred = K.reshape(y_pred, (dim, dim2))
+    return K.mean(K.sqrt(K.sum(K.square(y_pred - y_true), axis=-1, keepdims=True)))
 
 
 def getModel():
     model = Sequential()
-    #model.add(BatchNormalization(input_shape=(96, 96, 1)))
-    model.add(Conv2D(24, (5, 5), padding="same", kernel_initializer="he_normal", input_shape=(2, 128, 128), data_format="channels_first"))
+
+    # 1st convolutional layer
+    model.add(Conv2D(filters=32, kernel_size=(3, 3), strides=(1, 1), padding="same", kernel_initializer="he_normal",
+                     input_shape=(2, 128, 128), data_format="channels_first"))
+    model.add(Activation("relu"))
+    model.add(Conv2D(filters=32, kernel_size=(3, 3), strides=(1, 1), padding="same"))
     model.add(Activation("relu"))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid"))
-    model.add(Conv2D(36, (5, 5), padding="same"))
+    model.add(Dropout(0.25))
+
+    # 2nd convolutional layer
+    model.add(Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1), padding="same"))
+    model.add(Activation("relu"))
+    model.add(Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1), padding="same"))
     model.add(Activation("relu"))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid"))
-    model.add(Conv2D(48, (3, 3), padding="same"))
+    model.add(Dropout(0.25))
+
+    # 3rd convolutional layer
+    model.add(Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), padding="same"))
+    model.add(Activation("relu"))
+    model.add(Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), padding="same"))
     model.add(Activation("relu"))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid"))
-    #model.add(Conv2D(64, (3, 3)))
-    #model.add(Activation("relu"))
-    #model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid"))
-    #model.add(Conv2D(64, (3, 3)))
-    #model.add(Activation("relu"))
-    #model.add(GlobalAveragePooling2D())
+    model.add(Dropout(0.25))
+
+    # flatten output
     model.add(Flatten())
-    model.add(Dense(500, activation="relu"))
-    model.add(Dense(90, activation="relu"))
+
+    # fully connected layer
+    model.add(Dense(512, activation="relu"))
+
+    # output layer
     model.add(Dense(44))
 
-    model.compile(optimizer=keras.optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True), loss="mse", metrics=["acc"])
+    # model.compile(optimizer=keras.optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True), loss="mse", metrics=["acc"])
+    model.compile(optimizer=keras.optimizers.Adam(), loss=mean_euclidean_dist, metrics=["acc", mean_euclidean_dist])
 
     print(model.summary())
     return model
@@ -86,12 +104,12 @@ def getFeatureVector(id):
     nrows, ncols, zmin, imfile, data = readBosphorus.readBNTFile(id+".bnt")
     points, labels = readBosphorus.readLM2File(id+".lm2")
     image = cv.imread(id+".png")
-    depth = data[:,2]
+    depth = data[:, 2]
     depth = depth.reshape((nrows, ncols))
     depth = np.flip(depth, 0)
     gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
 
-    im = cv.resize(gray, (128,128))
+    im = cv.resize(gray, (128, 128))
     im = np.asarray(im, dtype="float")
     im /= 255.0
 
@@ -101,7 +119,7 @@ def getFeatureVector(id):
     depth = (depth - depth_min) / (depth_max - depth_min)
     depth = np.nan_to_num(depth)
 
-    dep = cv.resize(depth, (128,128))
+    dep = cv.resize(depth, (128, 128))
 
     x = [im, dep]
     x = np.asarray(x, dtype='float')
@@ -115,39 +133,54 @@ def getFeatureVector(id):
         p[1] = p[1] / gray.shape[0]
         y.append(p)
 
-
     y = np.asarray(y, dtype='float')
     y = y.flatten()
 
     return x, y
 
 
-def visualize(x, y, plot_landmarks=True, annotate_landmarks=True):
+def visualize_result(x, y_pred, y_true, plot_landmarks=True, annotate_landmarks=False):
     # plot the RGB image
     plt.figure()
     plt.subplot(1, 2, 1)
-    plt.title("RGB")
+    plt.title("Predicted Landmarks")
     plt.imshow(x[0, :, :], cmap='gray')
-    y *= 128
-    y = y.reshape((22,2))
+    y_pred *= 128
+    y_pred = y_pred.reshape((22, 2))
 
     if plot_landmarks:  # plot facial landmarks as points
-        plt.scatter(y[:, 0], y[:, 1], s=20, c="red", alpha=1.0, edgecolor='black')
+        plt.scatter(y_pred[:, 0], y_pred[:, 1], s=20, c="red", alpha=1.0, edgecolor='black')
 
     if annotate_landmarks:  # annotate each landmark with its label
         for i, label in enumerate(FACIAL_LANDMARKS):
-            plt.annotate(label, (y[i, 0], y[i, 1]), color="white", fontsize="small")
+            plt.annotate(label, (y_pred[i, 0], y_true[i, 1]), color="white", fontsize="small")
 
     plt.subplot(1, 2, 2)
-    plt.title("Depth")
-    plt.imshow(x[1, :, :], cmap='gray')
+    plt.title("True Landmarks")
+    plt.imshow(x[0, :, :], cmap='gray')
+    y_true *= 128
+    y_true = y_true.reshape((22, 2))
+
+    if plot_landmarks:  # plot facial landmarks as points
+        plt.scatter(y_true[:, 0], y_true[:, 1], s=20, c="red", alpha=1.0, edgecolor='black')
+
+    if annotate_landmarks:  # annotate each landmark with its label
+        for i, label in enumerate(FACIAL_LANDMARKS):
+            plt.annotate(label, (y_true[i, 0], y_true[i, 1]), color="white", fontsize="small")
+
     plt.show()
 
 
 def main():
+    # build model
     model = getModel()
+
+    # retrieve dataset
     X, y = getDataset()
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+
+    # split into train and test
+    # TODO: think about stratifying according to the 6 basic emotions
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
     print(X_train.shape)
     print(X_test.shape)
@@ -156,15 +189,17 @@ def main():
 
     tensorboard = TensorBoard(update_freq='batch')
 
-    model.fit(X_train, y_train, verbose=True, validation_data=(X_test, y_test), epochs=4, callbacks=[tensorboard])
-    model.save("network.hdf5")
+    model.fit(X_train, y_train, validation_data=(X_test, y_test),
+              epochs=5, batch_size=2,
+              callbacks=[tensorboard], verbose=True)
+    model.save("./network.hdf5")
 
     while True:
         i = random.randint(0, X_test.shape[0]-1)
         y_pred = model.predict(np.asarray([X_test[i]]))
-        visualize(X_test[i], y_pred, annotate_landmarks=False)
-        visualize(X_test[i], y_test[i], annotate_landmarks=False)
 
+        # visualize result
+        visualize_result(X_test[i], y_pred, y_test[i])
 
 
 if __name__ == "__main__":
