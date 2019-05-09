@@ -18,12 +18,20 @@ from constants import FACIAL_LANDMARKS
 
 # calculate the average distance between the true points and the predicted points
 def mean_euclidean_dist(y_true, y_pred):
-    dim = K.constant(y_pred.shape[0]//2, dtype="int32")
-    print(dim, K.eval(dim))
-    dim2 = K.constant(2, dtype="int32")
-    print(dim2, K.eval(dim2))
-    y_true = K.reshape(y_true, (dim, dim2))
-    y_pred = K.reshape(y_pred, (dim, dim2))
+    # dim = K.constant(y_pred.shape[0]//2, dtype="int32")
+    # print(dim, K.eval(dim))
+    # dim2 = K.constant(2, dtype="int32")
+    # print(dim2, K.eval(dim2))
+    # print(y_true.shape[0]//2)
+    # dim = K.int_shape(y_true)
+    # dim = dim[0]//2
+    # y_true = K.print_tensor(y_true, message="y_true is =")
+    # shape = K.shape(y_true)
+    # TODO: have a look at how to print the tensor and or it's shape
+    # TODO: try to figure out the batch size in here and divide it by 2
+    y_true = K.print_tensor(y_true, message="Shape is =")
+    y_true = K.reshape(y_true, (22, 2))
+    y_pred = K.reshape(y_pred, (22, 2))
     return K.mean(K.sqrt(K.sum(K.square(y_pred - y_true), axis=-1, keepdims=True)))
 
 
@@ -65,7 +73,7 @@ def getModel():
     model.add(Dense(44))
 
     # model.compile(optimizer=keras.optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True), loss="mse", metrics=["acc"])
-    model.compile(optimizer=keras.optimizers.Adam(), loss="mse", metrics=["acc"])
+    model.compile(optimizer=keras.optimizers.Adam(), loss=mean_euclidean_dist, metrics=["acc", mean_euclidean_dist])
 
     print(model.summary())
     return model
@@ -190,8 +198,8 @@ def main():
     tensorboard = TensorBoard(update_freq='batch')
 
     model.fit(X_train, y_train, validation_data=(X_test, y_test),
-              epochs=5, batch_size=2,
-              callbacks=[tensorboard], verbose=True)
+              epochs=1, batch_size=1,
+              callbacks=[tensorboard], verbose=False)
     model.save("./network.hdf5")
 
     while True:
