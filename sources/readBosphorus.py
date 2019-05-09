@@ -5,7 +5,7 @@ import os
 import matplotlib.pyplot as plt
 from skimage import io
 import random
-from .constants import FACIAL_LANDMARKS
+from constants import FACIAL_LANDMARKS
 
 # reads a BNT file
 # returns num rows, num cols, zmin value, image filename, data as np array

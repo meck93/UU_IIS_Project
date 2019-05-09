@@ -1,5 +1,6 @@
 import pyrealsense2 as rs
 import numpy as np
+from abc import ABC, abstractmethod
 
 def create_camera_configuration():
     image_size = (640, 480)
@@ -10,8 +11,13 @@ def create_camera_configuration():
                          rs.format.z16, 30)
     return config
 
+class Source(ABC):
+    @abstractmethod
+    def getFrame():
+        pass
 
-class RealSenseCam():
+
+class RealSenseCam(Source):
     def __init__(self):
         # configure the realsense camera
         self.pipeline = rs.pipeline()

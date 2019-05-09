@@ -1,9 +1,7 @@
 # our stuff
 datasets/
-.vscode
-!datasets/test_annotation
-!datasets/test_annotation/*
-!datasets/test_annotation/**/*
+logs/
+network.hdf5
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
