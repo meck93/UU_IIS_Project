@@ -12,8 +12,8 @@ from keras.models import Sequential
 from sklearn.model_selection import train_test_split
 
 import cv2 as cv
-from read_bosphorus import readBosphorus
-from read_bosphorus.constants import FACIAL_LANDMARKS
+from sources import readBosphorus
+from constants import FACIAL_LANDMARKS
 
 
 # calculate the average distance between the true points and the predicted points

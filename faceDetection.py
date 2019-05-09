@@ -63,9 +63,16 @@ def main(rgb_file, depth_file):
     cv2.destroyAllWindows()
 
 
-if __name__ == "__main__":
-    # TODO: adjust input files to your local settings
-    rgb_file = './datasets/self_created/dataset/RGB_0200.png'
-    depth_file = './datasets/self_created/dataset/D_0200.png'
+def detectFaces(image, depth):
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    main(rgb_file, depth_file)
+    face_cascade = cv2.CascadeClassifier(cv2.__path__[0] + '/data/haarcascade_frontalface_default.xml')
+    faces = face_cascade.detectMultiScale(gray_image, 1.3, 5)
+
+    output = []
+    if faces is not None:
+        for (x, y, w, h) in faces:
+            d = depth[y:y+h, x:x+w]
+            im = gray_image[y:y+h, x:x+w]
+            # TODO
+    return output
