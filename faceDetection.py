@@ -63,9 +63,5 @@ def main(rgb_file, depth_file):
     cv2.destroyAllWindows()
 
 
-if __name__ == "__main__":
-    # TODO: adjust input files to your local settings
-    rgb_file = './datasets/self_created/dataset/RGB_0200.png'
-    depth_file = './datasets/self_created/dataset/D_0200.png'
-
-    main(rgb_file, depth_file)
+def detectFaces(image, depth):
+    return None

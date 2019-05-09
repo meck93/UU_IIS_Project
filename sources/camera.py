@@ -50,6 +50,3 @@ class RealSenseCam(Source):
     
     def __del__(self):
         self.pipeline.stop()
-
-class Dataset(Source):
-    pass
