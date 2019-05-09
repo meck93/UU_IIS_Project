@@ -4,6 +4,7 @@ Uppsala University - Intelligent Interactive System Project
 
 ## Getting started
 - Copy the Bosphorus data set to `./datasets/bosphorus/` such that the folder `bs000` lies in `./datasets/bosphorus/`
+- Our own dataset has to be in the folder `./datasets/self_created/` such that e.g. the file `./datasets/self_created/dataset/RGB_0000.png` exists.
 - `pip install -r requirements.txt`
 
 ## Structure

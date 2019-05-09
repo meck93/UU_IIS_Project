@@ -1,18 +1,22 @@
 from sources.camera import RealSenseCam
+from sources.dataset import Dataset
 import matplotlib.pyplot as plt
 from faceDetection import detectFaces
-from landmarkDetection import detectLandmarks
+from landmarkDetection import LandmarkDetector
+import cv2
 
 def main():
 
-    source = RealSenseCam()
+    source = Dataset() # for camera use RealsenseCam()
+
+    landmarkDetector = LandmarkDetector()
 
     while True:
         image, depth = source.getFrame()
 
         faces = detectFaces(image, depth)
 
-        landmarks = detectLandmarks(faces)
+        landmarks = landmarkDetector.detectLandmarks(faces)
 
 
 if __name__ == "__main__":

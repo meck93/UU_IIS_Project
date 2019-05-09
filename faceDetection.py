@@ -64,4 +64,15 @@ def main(rgb_file, depth_file):
 
 
 def detectFaces(image, depth):
-    return None
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    face_cascade = cv2.CascadeClassifier(cv2.__path__[0] + '/data/haarcascade_frontalface_default.xml')
+    faces = face_cascade.detectMultiScale(gray_image, 1.3, 5)
+
+    output = []
+    if faces is not None:
+        for (x, y, w, h) in faces:
+            d = depth[y:y+h, x:x+w]
+            im = gray_image[y:y+h, x:x+w]
+            # TODO
+    return output
