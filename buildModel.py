@@ -65,7 +65,7 @@ def getModel():
     model.add(Dense(44))
 
     # model.compile(optimizer=keras.optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True), loss="mse", metrics=["acc"])
-    model.compile(optimizer=keras.optimizers.Adam(), loss=mean_euclidean_dist, metrics=["acc", mean_euclidean_dist])
+    model.compile(optimizer=keras.optimizers.Adam(), loss="mse", metrics=["acc"])
 
     print(model.summary())
     return model

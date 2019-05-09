@@ -110,5 +110,13 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+dataset/
+dataset2/
+*.jpg
+*.csv
+*.npz
+own_dataset/
+solutions/
+
 # vscode
 .vscode
