@@ -13,7 +13,7 @@ class Dataset(Source):
         path_rgb = self.path + "RGB_{:04d}.png".format(self.i)
         image = cv2.imread(path_rgb)
         path_depth = self.path + "D_{:04d}.png".format(self.i)
-        depth = cv2.imread(path_depth)
+        depth = cv2.imread(path_depth, cv2.IMREAD_GRAYSCALE)
         if image is None or depth is None:
             # restart
             self.i = 0
