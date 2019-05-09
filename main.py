@@ -1,14 +1,12 @@
 import cv2
 import pyrealsense2 as rs
 import numpy as np
-import face_alignment
 from record_dataset.record import create_camera_configuration
 from face_recognition import crop_image
 from record_dataset.source import RealSenseCam
 import matplotlib.pyplot as plt
 
 def main():
-    #fa = face_alignment.FaceAlignment(face_alignment.LandmarksType._2D, device='cpu', flip_input=True)
     source = RealSenseCam()
 
     ax1 = plt.subplot(1, 3, 1)
