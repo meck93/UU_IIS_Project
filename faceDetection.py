@@ -74,5 +74,14 @@ def detectFaces(image, depth):
         for (x, y, w, h) in faces:
             d = depth[y:y+h, x:x+w]
             im = gray_image[y:y+h, x:x+w]
-            # TODO
+
+            d = cv2.resize(d, (128, 128))
+            im = cv2.resize(im, (128, 128))
+
+            x = [im, d]
+            x = np.asarray(x, dtype='float')
+            output.append(x)
+
+    output = np.asarray(output)
+
     return output
