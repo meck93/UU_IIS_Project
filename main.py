@@ -5,9 +5,9 @@ from faceDetection import detectFaces
 from landmarkDetection import LandmarkDetector
 from buildModel import visualize
 
-def main():
 
-    source = Dataset() # for camera use RealsenseCam()
+def main():
+    source = Dataset()  # for camera use RealsenseCam()
 
     landmarkDetector = LandmarkDetector()
 

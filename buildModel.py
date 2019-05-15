@@ -1,37 +1,27 @@
+import os
 import random
 
 import keras
 import keras.backend as K
 import matplotlib.pyplot as plt
 import numpy as np
-from keras.callbacks import ModelCheckpoint, TensorBoard
-from keras.layers import (Activation, BatchNormalization, Conv2D, Dense,
-                          Dropout, Flatten, GlobalAveragePooling2D,
+from keras.callbacks import (
+    EarlyStopping, ModelCheckpoint, ReduceLROnPlateau, TensorBoard)
+from keras.layers import (Activation, Conv2D, Dense, Dropout, Flatten,
                           MaxPooling2D)
 from keras.models import Sequential
 from sklearn.model_selection import train_test_split
 
 import cv2 as cv
-from sources import readBosphorus
 from constants import FACIAL_LANDMARKS
+from sources import readBosphorus
 
 
 # calculate the average distance between the true points and the predicted points
 def mean_euclidean_dist(y_true, y_pred):
-    # dim = K.constant(y_pred.shape[0]//2, dtype="int32")
-    # print(dim, K.eval(dim))
-    # dim2 = K.constant(2, dtype="int32")
-    # print(dim2, K.eval(dim2))
-    # print(y_true.shape[0]//2)
-    # dim = K.int_shape(y_true)
-    # dim = dim[0]//2
-    # y_true = K.print_tensor(y_true, message="y_true is =")
-    # shape = K.shape(y_true)
-    # TODO: have a look at how to print the tensor and or it's shape
-    # TODO: try to figure out the batch size in here and divide it by 2
-    y_true = K.print_tensor(y_true, message="Shape is =")
-    y_true = K.reshape(y_true, (22, 2))
-    y_pred = K.reshape(y_pred, (22, 2))
+    # reshape: label vector (44,1,batchsize)
+    y_true = K.reshape(y_true, (22, 2, -1))
+    y_pred = K.reshape(y_pred, (22, 2, -1))
     return K.mean(K.sqrt(K.sum(K.square(y_pred - y_true), axis=-1, keepdims=True)))
 
 
@@ -45,7 +35,7 @@ def getModel():
     model.add(Conv2D(filters=32, kernel_size=(3, 3), strides=(1, 1), padding="same"))
     model.add(Activation("relu"))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid"))
-    model.add(Dropout(0.25))
+    model.add(Dropout(rate=0.0))
 
     # 2nd convolutional layer
     model.add(Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1), padding="same"))
@@ -53,7 +43,7 @@ def getModel():
     model.add(Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1), padding="same"))
     model.add(Activation("relu"))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid"))
-    model.add(Dropout(0.25))
+    model.add(Dropout(rate=0.0))
 
     # 3rd convolutional layer
     model.add(Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), padding="same"))
@@ -61,7 +51,7 @@ def getModel():
     model.add(Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), padding="same"))
     model.add(Activation("relu"))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid"))
-    model.add(Dropout(0.25))
+    model.add(Dropout(rate=0.0))
 
     # flatten output
     model.add(Flatten())
@@ -147,7 +137,29 @@ def getFeatureVector(id):
     return x, y
 
 
-def visualize_result(x, y_pred, y_true, plot_landmarks=True, annotate_landmarks=False):
+def visualize(x, y, plot_landmarks=True, annotate_landmarks=True):
+    # plot the RGB image
+    plt.figure()
+    plt.subplot(1, 2, 1)
+    plt.title("RGB")
+    plt.imshow(x[0, :, :], cmap='gray')
+    y *= 128
+    y = y.reshape((22, 2))
+
+    if plot_landmarks:  # plot facial landmarks as points
+        plt.scatter(y[:, 0], y[:, 1], s=20, c="red", alpha=1.0, edgecolor='black')
+
+    if annotate_landmarks:  # annotate each landmark with its label
+        for i, label in enumerate(FACIAL_LANDMARKS):
+            plt.annotate(label, (y[i, 0], y[i, 1]), color="white", fontsize="small")
+
+    plt.subplot(1, 2, 2)
+    plt.title("Depth")
+    plt.imshow(x[1, :, :], cmap='gray')
+    plt.show()
+
+
+def visualize_prediction(x, y_pred, y_true, plot_landmarks=True, annotate_landmarks=False):
     # plot the RGB image
     plt.figure()
     plt.subplot(1, 2, 1)
@@ -179,7 +191,7 @@ def visualize_result(x, y_pred, y_true, plot_landmarks=True, annotate_landmarks=
     plt.show()
 
 
-def main():
+def main(name, plot_graph=False):
     # build model
     model = getModel()
 
@@ -195,20 +207,29 @@ def main():
     print(y_train.shape)
     print(y_test.shape)
 
-    tensorboard = TensorBoard(update_freq='batch')
+    tensorboard = TensorBoard(update_freq='batch', log_dir="./logs/{}/".format(name))
+    early = EarlyStopping(monitor='val_mean_euclidean_dist', patience=10, restore_best_weights=True)
+    reduce_lr = ReduceLROnPlateau(monitor='val_mean_euclidean_dist', verbose=True, factor=0.5, patience=4)
 
-    model.fit(X_train, y_train, validation_data=(X_test, y_test),
-              epochs=1, batch_size=1,
-              callbacks=[tensorboard], verbose=False)
+    history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=30,
+                        batch_size=32, callbacks=[tensorboard, early, reduce_lr], verbose=True)
     model.save("./network.hdf5")
 
     while True:
         i = random.randint(0, X_test.shape[0]-1)
-        y_pred = model.predict(np.asarray([X_test[i]]))
+        y_pred = model.predict(np.asarray([X_test[i]]))  # predict the facial landmarks
+        visualize_prediction(X_test[i], y_pred, y_test[i])  # visualize the predictions next to the true landmarks
 
-        # visualize result
-        visualize_result(X_test[i], y_pred, y_test[i])
+    if plot_graph:
+        # summarize history for accuracy
+        plt.plot(history.history['mean_euclidean_dist'])
+        plt.plot(history.history['val_mean_euclidean_dist'])
+        plt.title('Mean Euclidean Distance: {}'.format(name))
+        plt.ylabel('Mean Euclidean Distance')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
 
 
 if __name__ == "__main__":
-    main()
+    main("Test")
