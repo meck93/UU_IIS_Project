@@ -111,7 +111,7 @@ venv.bak/
 dataset/
 dataset2/
 *.jpg
-*.csv
+# *.csv
 *.npz
 own_dataset/
 solutions/
