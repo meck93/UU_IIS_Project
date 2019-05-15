@@ -18,12 +18,12 @@ from sources import readBosphorus
 
 
 # calculate the average distance between the true points and the predicted points
-def metric_avg_distance(y_true, y_pred):
-    A=K.reshape(y_true, (22, 2, -1))
-    B=K.reshape(y_pred, (22, 2, -1))
-    Z=A-B
-    z=K.abs(K.sqrt(K.sum(K.square(Z),axis=-1,keepdims=False)))
-    avg=K.mean(z, axis=None, keepdims=False)
+def avg_dist_coordinates(y_true, y_pred):
+    A = K.reshape(y_true, (22, 2, -1))
+    B = K.reshape(y_pred, (22, 2, -1))
+    Z = A-B
+    z = K.abs(K.sqrt(K.sum(K.square(Z), axis=-1, keepdims=False)))
+    avg = K.mean(z, axis=None, keepdims=False)
     return avg
 
 
@@ -66,7 +66,7 @@ def getModel():
 
     # compile the model with Adam optimizer + use custom metric as loss and metric
     # TODO: experiment with "MSE" loss and custom metric + custom metric as loss & metric
-    model.compile(optimizer=keras.optimizers.Adam(), loss=metric_avg_distance, metrics=["acc", metric_avg_distance])
+    model.compile(optimizer=keras.optimizers.Adam(), loss=avg_dist_coordinates, metrics=["acc", avg_dist_coordinates])
 
     print(model.summary())
     return model
@@ -211,8 +211,8 @@ def main(name, plot_graph=False):
     print(y_test.shape)
 
     tensorboard = TensorBoard(update_freq='batch', log_dir="./logs/{}/".format(name))
-    early = EarlyStopping(monitor='val_mean_euclidean_dist', patience=10, restore_best_weights=True)
-    reduce_lr = ReduceLROnPlateau(monitor='val_mean_euclidean_dist', verbose=True, factor=0.5, patience=4)
+    early = EarlyStopping(monitor='val_avg_dist_coordinates', patience=10, restore_best_weights=True)
+    reduce_lr = ReduceLROnPlateau(monitor='val_avg_dist_coordinates', verbose=True, factor=0.5, patience=4)
 
     history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=30,
                         batch_size=32, callbacks=[tensorboard, early, reduce_lr], verbose=True)
@@ -225,8 +225,8 @@ def main(name, plot_graph=False):
 
     if plot_graph:
         # summarize history for accuracy
-        plt.plot(history.history['mean_euclidean_dist'])
-        plt.plot(history.history['val_mean_euclidean_dist'])
+        plt.plot(history.history['avg_dist_coordinates'])
+        plt.plot(history.history['val_avg_dist_coordinates'])
         plt.title('Mean Euclidean Distance: {}'.format(name))
         plt.ylabel('Mean Euclidean Distance')
         plt.xlabel('epoch')
