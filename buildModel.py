@@ -18,11 +18,13 @@ from sources import readBosphorus
 
 
 # calculate the average distance between the true points and the predicted points
-def mean_euclidean_dist(y_true, y_pred):
-    # reshape: label vector (44,1,batchsize)
-    y_true = K.reshape(y_true, (22, 2, -1))
-    y_pred = K.reshape(y_pred, (22, 2, -1))
-    return K.mean(K.sqrt(K.sum(K.square(y_pred - y_true), axis=-1, keepdims=True)))
+def metric_avg_distance(y_true, y_pred):
+    A=K.reshape(y_true, (22, 2, -1))
+    B=K.reshape(y_pred, (22, 2, -1))
+    Z=A-B
+    z=K.abs(K.sqrt(K.sum(K.square(Z),axis=-1,keepdims=False)))
+    avg=K.mean(z, axis=None, keepdims=False)
+    return avg
 
 
 def getModel():
@@ -62,8 +64,9 @@ def getModel():
     # output layer
     model.add(Dense(44))
 
-    # model.compile(optimizer=keras.optimizers.SGD(lr=0.01, momentum=0.9, nesterov=True), loss="mse", metrics=["acc"])
-    model.compile(optimizer=keras.optimizers.Adam(), loss=mean_euclidean_dist, metrics=["acc", mean_euclidean_dist])
+    # compile the model with Adam optimizer + use custom metric as loss and metric
+    # TODO: experiment with "MSE" loss and custom metric + custom metric as loss & metric
+    model.compile(optimizer=keras.optimizers.Adam(), loss=metric_avg_distance, metrics=["acc", metric_avg_distance])
 
     print(model.summary())
     return model
