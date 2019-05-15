@@ -1,55 +1,72 @@
+import os
 import random
 
 import keras
 import keras.backend as K
 import matplotlib.pyplot as plt
 import numpy as np
-from keras.callbacks import ModelCheckpoint, TensorBoard
-from keras.layers import (Activation, BatchNormalization, Conv2D, Dense,
-                          Flatten, GlobalAveragePooling2D, MaxPooling2D)
-from keras.models import Sequential, load_model
+from keras.callbacks import (
+    EarlyStopping, ModelCheckpoint, ReduceLROnPlateau, TensorBoard)
+from keras.layers import (Activation, Conv2D, Dense, Dropout, Flatten,
+                          MaxPooling2D)
+from keras.models import Sequential
 from sklearn.model_selection import train_test_split
 
 import cv2 as cv
-from sources import readBosphorus
 from constants import FACIAL_LANDMARKS
+from sources import readBosphorus
 
 
 # calculate the average distance between the true points and the predicted points
-def metric_avg_distance(y_true, y_pred):
-    A=K.reshape(y_true, (22, 2, -1))
-    B=K.reshape(y_pred, (22, 2, -1))
-    Z=A-B
-    z=K.abs(K.sqrt(K.sum(K.square(Z),axis=-1,keepdims=False)))
-    avg=K.mean(z, axis=None, keepdims=False)
+def avg_dist_coordinates(y_true, y_pred):
+    A = K.reshape(y_true, (22, 2, -1))
+    B = K.reshape(y_pred, (22, 2, -1))
+    Z = A-B
+    z = K.abs(K.sqrt(K.sum(K.square(Z), axis=-1, keepdims=False)))
+    avg = K.mean(z, axis=None, keepdims=False)
     return avg
 
 
 def getModel():
     model = Sequential()
-    #model.add(BatchNormalization(input_shape=(96, 96, 1)))
-    model.add(Conv2D(24, (5, 5), padding="same", kernel_initializer="he_normal",
+
+    # 1st convolutional layer
+    model.add(Conv2D(filters=32, kernel_size=(3, 3), strides=(1, 1), padding="same", kernel_initializer="he_normal",
                      input_shape=(2, 128, 128), data_format="channels_first"))
     model.add(Activation("relu"))
-    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid"))
-    model.add(Conv2D(36, (5, 5), padding="same"))
+    model.add(Conv2D(filters=32, kernel_size=(3, 3), strides=(1, 1), padding="same"))
     model.add(Activation("relu"))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid"))
-    model.add(Conv2D(48, (3, 3), padding="same"))
+    model.add(Dropout(rate=0.0))
+
+    # 2nd convolutional layer
+    model.add(Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1), padding="same"))
+    model.add(Activation("relu"))
+    model.add(Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1), padding="same"))
     model.add(Activation("relu"))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid"))
-    #model.add(Conv2D(64, (3, 3)))
-    # model.add(Activation("relu"))
-    #model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid"))
-    #model.add(Conv2D(64, (3, 3)))
-    # model.add(Activation("relu"))
-    # model.add(GlobalAveragePooling2D())
+    model.add(Dropout(rate=0.0))
+
+    # 3rd convolutional layer
+    model.add(Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), padding="same"))
+    model.add(Activation("relu"))
+    model.add(Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), padding="same"))
+    model.add(Activation("relu"))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid"))
+    model.add(Dropout(rate=0.0))
+
+    # flatten output
     model.add(Flatten())
-    model.add(Dense(500, activation="relu"))
-    model.add(Dense(90, activation="relu"))
+
+    # fully connected layer
+    model.add(Dense(512, activation="relu"))
+
+    # output layer
     model.add(Dense(44))
 
-    model.compile(optimizer="rmsprop", loss="mse", metrics=[metric_avg_distance])
+    # compile the model with Adam optimizer + use custom metric as loss and metric
+    # TODO: experiment with "MSE" loss and custom metric + custom metric as loss & metric
+    model.compile(optimizer=keras.optimizers.Adam(), loss=avg_dist_coordinates, metrics=["acc", avg_dist_coordinates])
 
     print(model.summary())
     return model
@@ -145,9 +162,47 @@ def visualize(x, y, plot_landmarks=True, annotate_landmarks=True):
     plt.show()
 
 
-def main():
+def visualize_prediction(x, y_pred, y_true, plot_landmarks=True, annotate_landmarks=False):
+    # plot the RGB image
+    plt.figure()
+    plt.subplot(1, 2, 1)
+    plt.title("Predicted Landmarks")
+    plt.imshow(x[0, :, :], cmap='gray')
+    y_pred *= 128
+    y_pred = y_pred.reshape((22, 2))
+
+    if plot_landmarks:  # plot facial landmarks as points
+        plt.scatter(y_pred[:, 0], y_pred[:, 1], s=20, c="red", alpha=1.0, edgecolor='black')
+
+    if annotate_landmarks:  # annotate each landmark with its label
+        for i, label in enumerate(FACIAL_LANDMARKS):
+            plt.annotate(label, (y_pred[i, 0], y_true[i, 1]), color="white", fontsize="small")
+
+    plt.subplot(1, 2, 2)
+    plt.title("True Landmarks")
+    plt.imshow(x[0, :, :], cmap='gray')
+    y_true *= 128
+    y_true = y_true.reshape((22, 2))
+
+    if plot_landmarks:  # plot facial landmarks as points
+        plt.scatter(y_true[:, 0], y_true[:, 1], s=20, c="red", alpha=1.0, edgecolor='black')
+
+    if annotate_landmarks:  # annotate each landmark with its label
+        for i, label in enumerate(FACIAL_LANDMARKS):
+            plt.annotate(label, (y_true[i, 0], y_true[i, 1]), color="white", fontsize="small")
+
+    plt.show()
+
+
+def main(name, plot_graph=False):
+    # build model
     model = getModel()
+
+    # retrieve dataset
     X, y = getDataset()
+
+    # split into train and tests
+    # TODO: think about stratifying according to the 6 basic emotions
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
     print(X_train.shape)
@@ -155,18 +210,28 @@ def main():
     print(y_train.shape)
     print(y_test.shape)
 
-    tensorboard = TensorBoard(update_freq='batch')
+    tensorboard = TensorBoard(update_freq='batch', log_dir="./logs/{}/".format(name))
+    early = EarlyStopping(monitor='val_avg_dist_coordinates', patience=10, restore_best_weights=True)
+    reduce_lr = ReduceLROnPlateau(monitor='val_avg_dist_coordinates', verbose=True, factor=0.5, patience=4)
 
-    model.fit(X_train, y_train, verbose=True, validation_data=(X_test, y_test), epochs=4, callbacks=[tensorboard])
-    model.save("network.hdf5")
-    #model.load_weights("./network.hdf5")
+    history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=30,
+                        batch_size=32, callbacks=[tensorboard, early, reduce_lr], verbose=True)
+    model.save("./network.hdf5")
+
+    if plot_graph:
+        # summarize history for avg_dist_coordinates
+        plt.plot(history.history['avg_dist_coordinates'])
+        plt.plot(history.history['val_avg_dist_coordinates'])
+        plt.title('Mean Euclidean Distance: {}'.format(name))
+        plt.ylabel('Mean Euclidean Distance')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
 
     while True:
         i = random.randint(0, X_test.shape[0]-1)
-        y_pred = model.predict(np.asarray([X_test[i]]))
-        visualize(X_test[i], y_pred)
-        visualize(X_test[i], y_test[i])
-
+        y_pred = model.predict(np.asarray([X_test[i]]))  # predict the facial landmarks
+        visualize_prediction(X_test[i], y_pred, y_test[i])  # visualize the predictions next to the true landmarks
 
 if __name__ == "__main__":
-    main()
+    main("Test")
