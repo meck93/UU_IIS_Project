@@ -17,12 +17,11 @@ from constants import FACIAL_LANDMARKS
 
 # calculate the average distance between the true points and the predicted points
 def metric_avg_distance(y_true, y_pred):
-    K.reshape(y_true, (22, 2))
-    K.reshape(y_pred, (22, 2))
-    avg = 0
-    for i in range(22):
-        avg += K.l2_normalize(y_true[i] - y_pred[i])
-    avg /= 22.0
+    A=K.reshape(y_true, (22, 2, -1))
+    B=K.reshape(y_pred, (22, 2, -1))
+    Z=A-B
+    z=K.abs(K.sqrt(K.sum(K.square(Z),axis=-1,keepdims=False)))
+    avg=K.mean(z, axis=None, keepdims=False)
     return avg
 
 
@@ -50,7 +49,7 @@ def getModel():
     model.add(Dense(90, activation="relu"))
     model.add(Dense(44))
 
-    model.compile(optimizer="rmsprop", loss="mse", metrics=["acc"])
+    model.compile(optimizer="rmsprop", loss="mse", metrics=[metric_avg_distance])
 
     print(model.summary())
     return model
@@ -156,11 +155,11 @@ def main():
     print(y_train.shape)
     print(y_test.shape)
 
-    # tensorboard = TensorBoard(update_freq='batch')
+    tensorboard = TensorBoard(update_freq='batch')
 
-    # model.fit(X_train, y_train, verbose=True, validation_data=(X_test, y_test), epochs=4, callbacks=[tensorboard])
-    # model.save("network.hdf5")
-    model.load_weights("./network.hdf5")
+    model.fit(X_train, y_train, verbose=True, validation_data=(X_test, y_test), epochs=4, callbacks=[tensorboard])
+    model.save("network.hdf5")
+    #model.load_weights("./network.hdf5")
 
     while True:
         i = random.randint(0, X_test.shape[0]-1)
