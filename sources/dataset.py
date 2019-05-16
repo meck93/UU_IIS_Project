@@ -27,7 +27,7 @@ class Dataset(Source):
 
         # read depth image
         path_depth = self.path + "D_{:04d}.png".format(image_index)
-        depth = cv2.imread(path_depth, cv2.IMREAD_GRAYSCALE)
+        depth = cv2.imread(path_depth, cv2.IMREAD_ANYDEPTH)
 
         if image is None or depth is None:
             # restart
