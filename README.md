@@ -11,6 +11,6 @@ Uppsala University - Intelligent Interactive System Project
 - `main.py` is the main entry point.
 - `faceDetection.py` handles the face detection.
 - `landmarkDetection.py` handles the landmark detection.
-- To build the CNN for facial landmark detection use `buildModel.py`.
+- To build the CNN for facial landmark detection use `buildModel.py`. Data augmentation is done in `augment.py`
 - The folder `sources` contains the code to read the Bosphorus dataset, read from the realsense camera and read our dataset.
 - The folder `landmarkdetect_bulat` contains the advanced landmark detection method by Bulat et al.
