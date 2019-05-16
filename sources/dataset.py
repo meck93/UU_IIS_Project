@@ -18,10 +18,17 @@ class Dataset(Source):
         return frames['filename'].values
 
     def getFrame(self):
-        path_rgb = self.path + "RGB_{:04d}.png".format(self.frames[self.i])
+        # create the filename of the current frame
+        image_index = self.frames[(self.i % len(self.frames))]
+
+        # read rgb image
+        path_rgb = self.path + "RGB_{:04d}.png".format(image_index)
         image = cv2.imread(path_rgb)
-        path_depth = self.path + "D_{:04d}.png".format(self.frames[self.i])
+
+        # read depth image
+        path_depth = self.path + "D_{:04d}.png".format(image_index)
         depth = cv2.imread(path_depth, cv2.IMREAD_GRAYSCALE)
+
         if image is None or depth is None:
             # restart
             self.i = 0
