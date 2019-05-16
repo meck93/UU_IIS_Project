@@ -2,6 +2,7 @@ from buildModel import getDataset, visualize
 from constants import FACIAL_LANDMARKS
 import random
 import numpy as np
+import cv2
 
 def augmentDataset(X, Y, factor=3):
     size = round(len(X)*factor)
@@ -13,10 +14,9 @@ def augmentDataset(X, Y, factor=3):
         x = X[i].copy()
         y = Y[i].copy()
         visualize(x, y)
-        print(y.shape)
         x, y = randomFlip(x, y)
-        #x, y = randomNoise(x, y)
-        print(y.shape)
+        x, y = randomRotation(x, y)
+        x, y = randomNoise(x, y)
         visualize(x, y)
 
     print(size)
@@ -29,6 +29,29 @@ def randomFlip(x, y):
     y_aug = flipLandmarks(y)
     return x_aug, y_aug
 
+
+def randomRotation(x, y):
+    rot = random.choice([-10, -5, 0, 5, 10])
+    if rot == 0:
+        return x, y
+
+    # rotate x
+    im = x[0]
+    dep = x[1]
+    h,w = im.shape
+    M = cv2.getRotationMatrix2D((w/2, h/2), rot, 1)
+    im2 = cv2.warpAffine(im, M, (w,h), borderMode=cv2.BORDER_REPLICATE)
+    dep2 = cv2.warpAffine(dep, M, (w,h))
+
+    # rotate y
+    y = y.reshape((22,2))
+    M2 = cv2.getRotationMatrix2D((0.5, 0.5), rot, 1)
+    for i, p in enumerate(y):
+        px = M2[0,0]*p[0] + M2[0,1]*p[1] + M2[0,2]
+        py = M2[1,0]*p[0] + M2[1,1]*p[1] + M2[1,2]
+        y[i] = np.asarray([px, py])
+    y.flatten()
+    return np.asarray([im2, dep2]), y
 
 def flipLandmarks(y):
     y = y.reshape((22,2))
