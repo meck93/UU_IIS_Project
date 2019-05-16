@@ -8,7 +8,7 @@ import pandas as pd
 class Dataset(Source):
     def __init__(self, path='./datasets/self_created/dataset/'):
         self.path = path
-        self.i = 25
+        self.i = 0
 
         if not os.path.isfile(self.path + "RGB_{:04d}.png".format(self.i)):
             raise Exception("Dataset source file does not exist:\n" + self.path + "RGB_{:04d}.png".format(self.i))
