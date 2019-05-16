@@ -4,6 +4,7 @@ import random
 import numpy as np
 import cv2
 
+
 def augmentDataset(X, Y, factor=3):
     size = round(len(X)*factor)
     X_aug = []
@@ -29,12 +30,36 @@ def augmentDataset(X, Y, factor=3):
     y_aug = np.asarray(y_aug)
     return X_aug, y_aug
 
+
 def randomFlip(x, y):
     if random.choice([True, False]):
         return x, y
     x_aug = np.asarray([np.flip(x[0], 1), np.flip(x[1], 1)], dtype='float')
     y_aug = flipLandmarks(y)
     return x_aug, y_aug
+
+
+def flipLandmarks(y):
+    y = y.reshape((22,2))
+    # flip
+    y[:, 0] = 1 - y[:, 0]
+    # switch left <-> right
+    landmarks_lower = list(map(str.lower, FACIAL_LANDMARKS))
+    y_new = []
+    for i, l in enumerate(landmarks_lower):
+        if "left" in l:
+            right = l.replace("left", "right")
+            idx = landmarks_lower.index(right)
+            y_new.append(y[idx])
+        elif "right" in l:
+            left = l.replace("right", "left")
+            idx = landmarks_lower.index(left)
+            y_new.append(y[idx])
+        else:
+            y_new.append(y[i])
+    y_new = np.asarray(y_new)
+    y_new = y_new.flatten()
+    return y_new
 
 
 def randomRotation(x, y):
@@ -81,28 +106,6 @@ def randomTranslation(x, y):
     y[:,1] += t_y/128.0
     y = y.flatten()
     return np.asarray([im2, dep2]), y
-
-def flipLandmarks(y):
-    y = y.reshape((22,2))
-    # flip
-    y[:, 0] = 1 - y[:, 0]
-    # switch left <-> right
-    landmarks_lower = list(map(str.lower, FACIAL_LANDMARKS))
-    y_new = []
-    for i, l in enumerate(landmarks_lower):
-        if "left" in l:
-            right = l.replace("left", "right")
-            idx = landmarks_lower.index(right)
-            y_new.append(y[idx])
-        elif "right" in l:
-            left = l.replace("right", "left")
-            idx = landmarks_lower.index(left)
-            y_new.append(y[idx])
-        else:
-            y_new.append(y[i])
-    y_new = np.asarray(y_new)
-    y_new = y_new.flatten()
-    return y_new
 
 
 def randomNoise(x, y):
