@@ -201,7 +201,7 @@ def main(name, plot_graph=False):
     # retrieve dataset
     X, y = getDataset()
 
-    # split into train and test
+    # split into train and tests
     # TODO: think about stratifying according to the 6 basic emotions
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
@@ -218,13 +218,8 @@ def main(name, plot_graph=False):
                         batch_size=32, callbacks=[tensorboard, early, reduce_lr], verbose=True)
     model.save("./network.hdf5")
 
-    while True:
-        i = random.randint(0, X_test.shape[0]-1)
-        y_pred = model.predict(np.asarray([X_test[i]]))  # predict the facial landmarks
-        visualize_prediction(X_test[i], y_pred, y_test[i])  # visualize the predictions next to the true landmarks
-
     if plot_graph:
-        # summarize history for accuracy
+        # summarize history for avg_dist_coordinates
         plt.plot(history.history['avg_dist_coordinates'])
         plt.plot(history.history['val_avg_dist_coordinates'])
         plt.title('Mean Euclidean Distance: {}'.format(name))
@@ -233,6 +228,10 @@ def main(name, plot_graph=False):
         plt.legend(['train', 'test'], loc='upper left')
         plt.show()
 
+    while True:
+        i = random.randint(0, X_test.shape[0]-1)
+        y_pred = model.predict(np.asarray([X_test[i]]))  # predict the facial landmarks
+        visualize_prediction(X_test[i], y_pred, y_test[i])  # visualize the predictions next to the true landmarks
 
 if __name__ == "__main__":
     main("Test")
