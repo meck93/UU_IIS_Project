@@ -8,6 +8,7 @@ from buildModel import visualize
 
 def main():
     source = Dataset()  # for camera use RealsenseCam()
+    landmarks, filenames, landmark_names = source.getLandmarks()  # retrieve the landmarks for the self-annotated dataset
 
     landmarkDetector = LandmarkDetector()
 

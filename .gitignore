@@ -1,7 +1,21 @@
 # our stuff
-datasets/
+datasets/bosphorus
+
+# ignore all RGB and Depth images but track landmarks
+datasets/self_created/dataset*/*.png
+!datasets/self_created/dataset/*.csv
+
+# 
+!model_evaluation/Dropout0.0/trained_network.hdf5
+!model_evaluation/Dropout0.1/trained_network.hdf5
+
+# our stuff
 logs/
 network.hdf5
+*.jpg
+*.npz
+*.npy
+solutions/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -107,14 +121,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-
-dataset/
-dataset2/
-*.jpg
-*.csv
-*.npz
-own_dataset/
-solutions/
 
 # vscode
 .vscode
