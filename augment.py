@@ -33,6 +33,7 @@ def augmentDataset(X, Y, factor=3):
         x, y = randomFlip(x, y)
         x, y = randomTranslation(x, y)
         x, y = randomRotation(x, y)
+        x, y = randomBlur(x, y)
         x, y = randomNoise(x, y)
         if not all(i<1 and i>0 for i in y):
             # some y is outside image boundaries
@@ -104,8 +105,8 @@ def randomRotation(x, y):
 
 
 def randomTranslation(x, y):
-    t_x = random.choice(range(-7,8))
-    t_y = random.choice(range(-7,8))
+    t_x = random.randint(-7,7)
+    t_y = random.randint(-7,7)
     if t_x == 0 and t_y == 0:
         return x, y
 
@@ -125,8 +126,24 @@ def randomTranslation(x, y):
     return np.asarray([im2, dep2]), y
 
 
+def randomBlur(x, y):
+    if random.choice([True, False]):
+        return x, y
+    blur_im_x = random.choice([1, 3])
+    blur_im_y = random.choice([1, 3])
+    blur_dep_x = random.choice([1, 3, 5, 7])
+    blur_dep_y = random.choice([1, 3, 5, 7])
+    im = x[0]
+    dep = x[1]
+    im2 = cv2.GaussianBlur(im, (blur_im_x, blur_im_y), 0)
+    dep2 = cv2.GaussianBlur(dep, (blur_dep_x, blur_dep_y), 0)
+    return np.asarray([im2, dep2]), y
+
+
 def randomNoise(x, y):
-    noise_spread_im = random.uniform(0, 0.05)
+    if random.choice([True, False, False]):
+        return x, y
+    noise_spread_im = random.uniform(0, 0.03)
     noise_spread_dep = random.uniform(0, 0.05)
     noise_im = np.random.normal(0, noise_spread_im, x[0].shape)
     noise_dep = np.random.normal(0, noise_spread_dep, x[1].shape)
