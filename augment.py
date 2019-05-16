@@ -1,8 +1,23 @@
-from buildModel import getDataset, visualize
 from constants import FACIAL_LANDMARKS
 import random
 import numpy as np
 import cv2
+
+
+def getAugmentedDataset(X, y, factor=3):
+    datasetlocation = "./datasets/bosphorus"
+    try:
+        X = np.load(datasetlocation+"_X_aug.npy")
+        y = np.load(datasetlocation+"_y_aug.npy")
+        return X, y
+    except IOError:
+        pass
+
+    print("Creating augmented dataset...")
+    X, y = augmentDataset(X, y, factor)
+    np.save(datasetlocation+"_X_aug.npy", X)
+    np.save(datasetlocation+"_y_aug.npy", y)
+    return X, y
 
 
 def augmentDataset(X, Y, factor=3):
@@ -25,6 +40,8 @@ def augmentDataset(X, Y, factor=3):
         #visualize(x, y)
         X_aug.append(x)
         y_aug.append(y)
+        if len(X_aug) % 10 == 0:
+            print("{:d}/{:d}".format(len(X_aug), size))
 
     X_aug = np.asarray(X_aug)
     y_aug = np.asarray(y_aug)
