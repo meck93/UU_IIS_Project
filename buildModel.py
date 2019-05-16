@@ -141,6 +141,7 @@ def getFeatureVector(id):
 
 
 def visualize(x, y, plot_landmarks=True, annotate_landmarks=True):
+    y = y.copy()
     # plot the RGB image
     plt.figure()
     plt.subplot(1, 2, 1)
