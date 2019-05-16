@@ -1,9 +1,10 @@
 import face_alignment
 import numpy as np
 import pandas as pd
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
-from skimage import io
+import os
+import sys
+sys.path.append("..")  # Adds higher directory to python modules path.
+
 from constants import LANDMARK_MAPPING
 
 
@@ -23,13 +24,19 @@ def annotate_images(pathname, save_to_file=True, print_preview=True):
     # Run the 3D face alignment on a test image, without CUDA.
     fa = face_alignment.FaceAlignment(face_alignment.LandmarksType._2D, device='cuda', flip_input=True)
 
-    # get the facial landmarks
-    landmarks = fa.get_landmarks_from_directory(pathname)
+    # get the directory content
+    dir_content = os.listdir(pathname)
+    landmarks = {}
+
+    for filename in dir_content:
+        if filename[:3] == "RGB" and filename[-4:] == ".png": # only process files named: RBG[.*].png 
+            landmarks_ = fa.get_landmarks_from_image("{}/{}".format(pathname, filename)) # get the facial landmarks
+            landmarks[filename] = landmarks_ # use the filename as key
 
     # create dataframe to store landmark coordinates
     df = pd.DataFrame()
 
-    # column names C1-C68 + key: label
+    # create the column names C1-C68 + key: filename
     n_columns = len(list(landmarks.values())[0][0])
     columns = ["{}".format(i+1) for i in range(n_columns)]
     columns.append("filename")
@@ -37,9 +44,10 @@ def annotate_images(pathname, save_to_file=True, print_preview=True):
     # initialize dictionary
     data = {key: list() for key in columns}
 
+    # transform the landmarks into a format useable by pandas
     for key, values in landmarks.items():
         # extract the picture name to use it as label
-        label = key[key.rfind("\\")+1:key.rfind(".")]
+        label = key[:key.rfind(".")]
         data['filename'].append(label)
 
         for i in range(len(values[0])):
@@ -65,12 +73,15 @@ def annotate_images(pathname, save_to_file=True, print_preview=True):
 
     if save_to_file:
         # write result to CSV
-        filename = "./image_landmarks_dataset3.csv"
+        filename = "./{}/landmarks_dataset.csv".format(pathname)
         df.to_csv(filename, sep=",", header=True, index=False)
 
-    return df
+        # write frame numbers to CSV
+        filename = "./{}/frames_used.csv".format(pathname)
+        frames = df['filename'].apply(lambda name: name[4:]) # remove the RGB_ part of the filename
+        frames.to_csv(filename, sep=",", header=True, index=False)
 
 
 if __name__ == "__main__":
-    annotate_images(pathname="../datasets/self_created/dataset3/rgb/")
-    # annotate_images(pathname="../datasets/test_annotation/input/")
+    # TODO: make sure that the correct input folder is selected
+    annotate_images(pathname="../datasets/self_created/test/")

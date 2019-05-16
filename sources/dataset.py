@@ -9,14 +9,18 @@ class Dataset(Source):
     def __init__(self, path='./datasets/self_created/dataset/'):
         self.path = path
         self.i = 0
+        if not os.path.isfile(self.path + "frames_used.csv"):
+            raise Exception("Dataset source file does not exist:\n" + self.path + "frames_used.csv is missing!")
+        self.frames = self._get_processed_frames()
 
-        if not os.path.isfile(self.path + "RGB_{:04d}.png".format(self.i)):
-            raise Exception("Dataset source file does not exist:\n" + self.path + "RGB_{:04d}.png".format(self.i))
+    def _get_processed_frames(self):
+        frames = pd.read_csv(self.path + "frames_used.csv")
+        return frames['filename'].values
 
     def getFrame(self):
-        path_rgb = self.path + "RGB_{:04d}.png".format(self.i)
+        path_rgb = self.path + "RGB_{:04d}.png".format(self.frames[self.i])
         image = cv2.imread(path_rgb)
-        path_depth = self.path + "D_{:04d}.png".format(self.i)
+        path_depth = self.path + "D_{:04d}.png".format(self.frames[self.i])
         depth = cv2.imread(path_depth, cv2.IMREAD_GRAYSCALE)
         if image is None or depth is None:
             # restart
