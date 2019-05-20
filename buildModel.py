@@ -15,7 +15,7 @@ from sklearn.model_selection import train_test_split
 import cv2 as cv
 from constants import FACIAL_LANDMARKS
 from sources import readBosphorus
-
+from augment import getAugmentedDataset
 
 # calculate the average distance between the true points and the predicted points
 def avg_dist_coordinates(y_true, y_pred):
@@ -141,6 +141,7 @@ def getFeatureVector(id):
 
 
 def visualize(x, y, plot_landmarks=True, annotate_landmarks=True):
+    y = y.copy()
     # plot the RGB image
     plt.figure()
     plt.subplot(1, 2, 1)
@@ -204,6 +205,11 @@ def main(name, plot_graph=False):
     # split into train and tests
     # TODO: think about stratifying according to the 6 basic emotions
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+
+    X_aug, y_aug = getAugmentedDataset(X_train, y_train)
+
+    X_train = np.concatenate([X_train, X_aug])
+    y_train = np.concatenate([y_train, y_aug])
 
     print(X_train.shape)
     print(X_test.shape)
