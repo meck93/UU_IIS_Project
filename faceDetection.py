@@ -1,5 +1,4 @@
 import numpy as np
-
 import cv2
 
 
@@ -76,7 +75,17 @@ def detectFaces(image, depth):
             im = gray_image[y:y+h, x:x+w]
 
             d = cv2.resize(d, (128, 128))
+            d = np.asarray(d, dtype='float')
+            d[d == 0] = np.nan
+            d_min = np.nanmin(d)
+            d_max = np.nanmax(d)
+            d = (d-d_min) / (d_max-d_min)
+            d = 1-d
+            d = np.nan_to_num(d)
+
             im = cv2.resize(im, (128, 128))
+            im = np.asarray(im, dtype="float")
+            im /= 255.0
 
             x = [im, d]
             x = np.asarray(x, dtype='float')
