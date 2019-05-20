@@ -24,9 +24,9 @@ def augmentDataset(X, Y, factor=3):
     size = round(len(X)*factor)
     X_aug = []
     y_aug = []
+    i = 0
     
     while len(X_aug) < size:
-        i = random.randint(0, len(X)-1)
         x = X[i].copy()
         y = Y[i].copy()
         #visualize(x, y)
@@ -41,8 +41,11 @@ def augmentDataset(X, Y, factor=3):
         #visualize(x, y)
         X_aug.append(x)
         y_aug.append(y)
+
         if len(X_aug) % 10 == 0:
             print("{:d}/{:d}".format(len(X_aug), size))
+
+        i = (i+1) % len(X)
 
     X_aug = np.asarray(X_aug)
     y_aug = np.asarray(y_aug)
@@ -81,7 +84,7 @@ def flipLandmarks(y):
 
 
 def randomRotation(x, y):
-    rot = random.choice([-10, -5, 0, 5, 10])
+    rot = random.choice([-9, -6. -3, 0, 3, 6, 9])
     if rot == 0:
         return x, y
 
@@ -150,12 +153,3 @@ def randomNoise(x, y):
     x[0] += noise_im
     x[1] += noise_dep
     return x, y
-
-
-def main():
-    X, y = getDataset()
-    X_aug, y_aug = augmentDataset(X, y)
-
-
-if __name__ == "__main__":
-    main()
