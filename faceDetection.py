@@ -83,13 +83,30 @@ def detectFaces(image, depth, boundary=(-0.05, 0.15)):
             im = gray_image[y1:y2, x1:x2]
 
             d = cv2.resize(d, (128, 128))
-            d = np.asarray(d, dtype='float')
-            d[d == 0] = np.nan
+            d = np.asarray(d, dtype='float32')
+            # remove everything that is too far from the average
+            avg = np.average(d)
+            lower_b = avg-avg*0.15
+            upper_b = avg+avg*0.15
+            d[d < lower_b] = np.nan
+            d[d > upper_b] = np.nan
+            # scale to range 0-1
             d_min = np.nanmin(d)
             d_max = np.nanmax(d)
             d = (d-d_min) / (d_max-d_min)
+            # invert to match bosphorus
             d = 1-d
             d = np.nan_to_num(d)
+            # use a median filter to remove high frequent salt and pepper noise
+            d = cv2.medianBlur(d, 5)
+            # use a closing operation with a disk-shaped structuring element to close holes
+            d = cv2.morphologyEx(d, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5)))
+            # scale to range 0-1 again
+            d_min = np.min(d)
+            d_max = np.max(d)
+            d = (d-d_min) / (d_max-d_min)
+            if np.isnan(np.sum(d)):
+                continue
 
             im = cv2.resize(im, (128, 128))
             im = np.asarray(im, dtype="float")
