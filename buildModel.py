@@ -9,7 +9,7 @@ from keras.callbacks import (
     EarlyStopping, ModelCheckpoint, ReduceLROnPlateau, TensorBoard)
 from keras.layers import (Activation, Conv2D, Dense, Dropout, Flatten,
                           MaxPooling2D)
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from sklearn.model_selection import train_test_split
 
 import cv2 as cv
@@ -17,15 +17,39 @@ from constants import FACIAL_LANDMARKS
 from sources import readBosphorus
 
 
-# calculate the average distance between the true points and the predicted points
-def avg_dist_coordinates(y_true, y_pred):
-    A = K.reshape(y_true, (22, 2, -1))
+def avg_l2_dist(y_true, y_pred):
+    """
+    Calculate the average distance between the true points and the predicted points using the L2-Norm.
+
+    Inputs:
+    - y_true: has shape (44,1) a vector of coordinates e.g., (x1,y1,x2,y2,...). 
+              reshaped such that each cooridnate pairs are together e.g., [[x1,y1], [x2, y2], ...]
+    - y_pred: has shape (44,1) a vector of coordinates e.g., (x1,y1,x2,y2,...). 
+              reshaped such that each cooridnate pairs are together e.g., [[x1,y1], [x2, y2], ...]
+    """
+    A = K.reshape(y_true, (22, 2, -1)) 
     B = K.reshape(y_pred, (22, 2, -1))
     Z = A-B
     z = K.abs(K.sqrt(K.sum(K.square(Z), axis=-1, keepdims=False)))
     avg = K.mean(z, axis=None, keepdims=False)
     return avg
 
+def avg_l1_dist(y_true, y_pred):
+    """
+    Calculate the average distance between the true points and the predicted points using the L2-Norm.
+
+    Inputs:
+    - y_true: has shape (44,1) a vector of coordinates e.g., (x1,y1,x2,y2,...). 
+              reshaped such that each cooridnate pairs are together e.g., [[x1,y1], [x2, y2], ...]
+    - y_pred: has shape (44,1) a vector of coordinates e.g., (x1,y1,x2,y2,...). 
+              reshaped such that each cooridnate pairs are together e.g., [[x1,y1], [x2, y2], ...]
+    """
+    A = K.reshape(y_true, (22, 2, -1))
+    B = K.reshape(y_pred, (22, 2, -1))
+    Z = K.abs(A-B)
+    z = K.sum(Z, axis=-1, keepdims=False)
+    avg = K.mean(z, axis=None, keepdims=False)
+    return avg
 
 def getModel():
     model = Sequential()
@@ -59,14 +83,14 @@ def getModel():
     model.add(Flatten())
 
     # fully connected layer
-    model.add(Dense(512, activation="relu"))
+    model.add(Dense(256, activation="relu"))
 
     # output layer
     model.add(Dense(44))
 
     # compile the model with Adam optimizer + use custom metric as loss and metric
     # TODO: experiment with "MSE" loss and custom metric + custom metric as loss & metric
-    model.compile(optimizer=keras.optimizers.Adam(), loss=avg_dist_coordinates, metrics=["acc", avg_dist_coordinates])
+    model.compile(optimizer=keras.optimizers.Adam(), loss=avg_l1_dist, metrics=["acc", avg_l1_dist])
 
     print(model.summary())
     return model
@@ -123,7 +147,7 @@ def getFeatureVector(id):
     dep = cv.resize(depth, (128, 128))
 
     x = [im, dep]
-    x = np.asarray(x, dtype='float')
+    x = np.asarray(x, dtype="float")
 
     y = []
 
@@ -134,7 +158,7 @@ def getFeatureVector(id):
         p[1] = p[1] / gray.shape[0]
         y.append(p)
 
-    y = np.asarray(y, dtype='float')
+    y = np.asarray(y, dtype="float")
     y = y.flatten()
 
     return x, y
@@ -145,12 +169,12 @@ def visualize(x, y, plot_landmarks=True, annotate_landmarks=True):
     plt.figure()
     plt.subplot(1, 2, 1)
     plt.title("RGB")
-    plt.imshow(x[0, :, :], cmap='gray')
+    plt.imshow(x[0, :, :], cmap="gray")
     y *= 128
     y = y.reshape((22, 2))
 
     if plot_landmarks:  # plot facial landmarks as points
-        plt.scatter(y[:, 0], y[:, 1], s=20, c="red", alpha=1.0, edgecolor='black')
+        plt.scatter(y[:, 0], y[:, 1], s=20, c="red", alpha=1.0, edgecolor="black")
 
     if annotate_landmarks:  # annotate each landmark with its label
         for i, label in enumerate(FACIAL_LANDMARKS):
@@ -158,7 +182,7 @@ def visualize(x, y, plot_landmarks=True, annotate_landmarks=True):
 
     plt.subplot(1, 2, 2)
     plt.title("Depth")
-    plt.imshow(x[1, :, :], cmap='gray')
+    plt.imshow(x[1, :, :], cmap="gray")
     plt.show()
 
 
@@ -167,12 +191,12 @@ def visualize_prediction(x, y_pred, y_true, plot_landmarks=True, annotate_landma
     plt.figure()
     plt.subplot(1, 2, 1)
     plt.title("Predicted Landmarks")
-    plt.imshow(x[0, :, :], cmap='gray')
+    plt.imshow(x[0, :, :], cmap="gray")
     y_pred *= 128
     y_pred = y_pred.reshape((22, 2))
 
     if plot_landmarks:  # plot facial landmarks as points
-        plt.scatter(y_pred[:, 0], y_pred[:, 1], s=20, c="red", alpha=1.0, edgecolor='black')
+        plt.scatter(y_pred[:, 0], y_pred[:, 1], s=20, c="red", alpha=1.0, edgecolor="black")
 
     if annotate_landmarks:  # annotate each landmark with its label
         for i, label in enumerate(FACIAL_LANDMARKS):
@@ -180,12 +204,12 @@ def visualize_prediction(x, y_pred, y_true, plot_landmarks=True, annotate_landma
 
     plt.subplot(1, 2, 2)
     plt.title("True Landmarks")
-    plt.imshow(x[0, :, :], cmap='gray')
+    plt.imshow(x[0, :, :], cmap="gray")
     y_true *= 128
     y_true = y_true.reshape((22, 2))
 
     if plot_landmarks:  # plot facial landmarks as points
-        plt.scatter(y_true[:, 0], y_true[:, 1], s=20, c="red", alpha=1.0, edgecolor='black')
+        plt.scatter(y_true[:, 0], y_true[:, 1], s=20, c="red", alpha=1.0, edgecolor="black")
 
     if annotate_landmarks:  # annotate each landmark with its label
         for i, label in enumerate(FACIAL_LANDMARKS):
@@ -194,7 +218,7 @@ def visualize_prediction(x, y_pred, y_true, plot_landmarks=True, annotate_landma
     plt.show()
 
 
-def main(name, plot_graph=False):
+def train_model(name, val_metric, plot_graph=False):
     # build model
     model = getModel()
 
@@ -210,22 +234,24 @@ def main(name, plot_graph=False):
     print(y_train.shape)
     print(y_test.shape)
 
-    tensorboard = TensorBoard(update_freq='batch', log_dir="./logs/{}/".format(name))
-    early = EarlyStopping(monitor='val_avg_dist_coordinates', patience=10, restore_best_weights=True)
-    reduce_lr = ReduceLROnPlateau(monitor='val_avg_dist_coordinates', verbose=True, factor=0.5, patience=4)
+    # set up different callbacks
+    tb = TensorBoard(update_freq="batch", log_dir="./logs/{}/".format(name))
+    early = EarlyStopping(monitor=val_metric, patience=9, restore_best_weights=True)
+    reduce_lr = ReduceLROnPlateau(monitor=val_metric, verbose=True, factor=0.5, patience=4)
+    cp = ModelCheckpoint(filepath="./models/{}/model.hdf5".format(name), monitor=val_metric, verbose=True, save_best_only=True)
 
-    history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=30,
-                        batch_size=32, callbacks=[tensorboard, early, reduce_lr], verbose=True)
-    model.save("./network.hdf5")
+    # train the model
+    history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=40,
+                        batch_size=32, callbacks=[tb, early, reduce_lr, cp], verbose=True)
 
     if plot_graph:
-        # summarize history for avg_dist_coordinates
-        plt.plot(history.history['avg_dist_coordinates'])
-        plt.plot(history.history['val_avg_dist_coordinates'])
-        plt.title('Mean Euclidean Distance: {}'.format(name))
-        plt.ylabel('Mean Euclidean Distance')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'test'], loc='upper left')
+        # summarize history for avg_l2_dist
+        plt.plot(history.history[val_metric[4:]])
+        plt.plot(history.history[val_metric])
+        plt.title("Mean Euclidean Distance: {}".format(name))
+        plt.ylabel("Mean Euclidean Distance")
+        plt.xlabel("epoch")
+        plt.legend(["train", "test"], loc="upper left")
         plt.show()
 
     while True:
@@ -233,5 +259,25 @@ def main(name, plot_graph=False):
         y_pred = model.predict(np.asarray([X_test[i]]))  # predict the facial landmarks
         visualize_prediction(X_test[i], y_pred, y_test[i])  # visualize the predictions next to the true landmarks
 
+def use_pretrained_model(name, custom_loss_name, plot_graph=False):
+    # build model
+    model = getModel()
+
+    # retrieve dataset
+    X, y = getDataset()
+
+    # split into train and tests
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # load a trained model from file
+    # TODO: make sure you use the correct custom loss function
+    model = load_model("./network.hdf5", custom_objects={custom_loss_name: avg_l1_dist})
+
+    while True:
+        i = random.randint(0, X_test.shape[0]-1)
+        y_pred = model.predict(np.asarray([X_test[i]]))  # predict the facial landmarks
+        visualize_prediction(X_test[i], y_pred, y_test[i])  # visualize the predictions next to the true landmarks
+
 if __name__ == "__main__":
-    main("Test")
+    # use_pretrained_model("L1Test", "avg_l1_dist")
+    train_model("L1Test", val_metric="val_avg_l1_dist")
