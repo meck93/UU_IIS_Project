@@ -16,6 +16,7 @@ import cv2 as cv
 from constants import FACIAL_LANDMARKS
 from sources import readBosphorus
 from augment import getAugmentedDataset
+from visualization import visualize_prediction
 
 def avg_l2_dist(y_true, y_pred):
     """
@@ -162,61 +163,6 @@ def getFeatureVector(id):
     y = y.flatten()
 
     return x, y
-
-
-def visualize(x, y, plot_landmarks=True, annotate_landmarks=True):
-    y = y.copy()
-    # plot the RGB image
-    plt.figure()
-    plt.subplot(1, 2, 1)
-    plt.title("RGB")
-    plt.imshow(x[0, :, :], cmap="gray")
-    y *= 128
-    y = y.reshape((22, 2))
-
-    if plot_landmarks:  # plot facial landmarks as points
-        plt.scatter(y[:, 0], y[:, 1], s=20, c="red", alpha=1.0, edgecolor="black")
-
-    if annotate_landmarks:  # annotate each landmark with its label
-        for i, label in enumerate(FACIAL_LANDMARKS):
-            plt.annotate(label, (y[i, 0], y[i, 1]), color="white", fontsize="small")
-
-    plt.subplot(1, 2, 2)
-    plt.title("Depth")
-    plt.imshow(x[1, :, :], cmap="gray")
-    plt.show()
-
-
-def visualize_prediction(x, y_pred, y_true, plot_landmarks=True, annotate_landmarks=False):
-    # plot the RGB image
-    plt.figure()
-    plt.subplot(1, 2, 1)
-    plt.title("Predicted Landmarks")
-    plt.imshow(x[0, :, :], cmap="gray")
-    y_pred *= 128
-    y_pred = y_pred.reshape((22, 2))
-
-    if plot_landmarks:  # plot facial landmarks as points
-        plt.scatter(y_pred[:, 0], y_pred[:, 1], s=20, c="red", alpha=1.0, edgecolor="black")
-
-    if annotate_landmarks:  # annotate each landmark with its label
-        for i, label in enumerate(FACIAL_LANDMARKS):
-            plt.annotate(label, (y_pred[i, 0], y_true[i, 1]), color="white", fontsize="small")
-
-    plt.subplot(1, 2, 2)
-    plt.title("True Landmarks")
-    plt.imshow(x[0, :, :], cmap="gray")
-    y_true *= 128
-    y_true = y_true.reshape((22, 2))
-
-    if plot_landmarks:  # plot facial landmarks as points
-        plt.scatter(y_true[:, 0], y_true[:, 1], s=20, c="red", alpha=1.0, edgecolor="black")
-
-    if annotate_landmarks:  # annotate each landmark with its label
-        for i, label in enumerate(FACIAL_LANDMARKS):
-            plt.annotate(label, (y_true[i, 0], y_true[i, 1]), color="white", fontsize="small")
-
-    plt.show()
 
 
 def train_model(name, val_metric, plot_graph=False):

@@ -1,16 +1,15 @@
 from sources.camera import RealSenseCam
 from sources.dataset import Dataset
-import matplotlib.pyplot as plt
 from faceDetection import detectFaces
 from landmarkDetection import LandmarkDetector
-from buildModel import visualize
-
+from visualization import initVisualization, updateVisualization
 
 def main():
     source = Dataset()  # for camera use RealsenseCam()
-    landmarks, filenames, landmark_names = source.getLandmarks()  # retrieve the landmarks for the self-annotated dataset
 
     landmarkDetector = LandmarkDetector()
+
+    vis = initVisualization()
 
     while True:
         image, depth = source.getFrame()
@@ -20,7 +19,7 @@ def main():
         landmarks = landmarkDetector.detectLandmarks(faces)
 
         for f, l in zip(faces, landmarks):
-            visualize(f, l, annotate_landmarks=False)
+            updateVisualization(f, l, vis)
 
 
 if __name__ == "__main__":
