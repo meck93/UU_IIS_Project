@@ -3,6 +3,7 @@ import numpy as np
 
 from constants import FACIAL_LANDMARKS
 
+
 def initVisualization():
     ax1 = plt.subplot(1, 2, 1)
     ax2 = plt.subplot(1, 2, 2)
@@ -77,4 +78,3 @@ def visualize_prediction(x, y_pred, y_true, plot_landmarks=True, annotate_landma
             plt.annotate(label, (y_true[i, 0], y_true[i, 1]), color="white", fontsize="small")
 
     plt.show()
-
