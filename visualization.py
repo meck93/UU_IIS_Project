@@ -1,13 +1,16 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+from constants import FACIAL_LANDMARKS
+
+
 def initVisualization():
     ax1 = plt.subplot(1, 2, 1)
     ax2 = plt.subplot(1, 2, 2)
     im1 = ax1.imshow(np.zeros((128,128)), cmap='gray', vmin=0, vmax=1)
     im2 = ax2.imshow(np.zeros((128,128)), cmap='gray', vmin=0, vmax=1)
     sc = ax1.scatter([],[], s=20, c="red", alpha=1.0, edgecolor="black")
-    plt.ion()
+    plt.ion() # interactive mode on
     return im1, im2, sc
 
 
@@ -75,4 +78,3 @@ def visualize_prediction(x, y_pred, y_true, plot_landmarks=True, annotate_landma
             plt.annotate(label, (y_true[i, 0], y_true[i, 1]), color="white", fontsize="small")
 
     plt.show()
-
