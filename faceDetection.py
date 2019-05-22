@@ -86,10 +86,11 @@ def detectFaces(image, depth, boundary=(-0.05, 0.15)):
             d = np.asarray(d, dtype='float32')
             # remove everything that is too far from the average
             avg = np.average(d)
-            lower_b = avg-avg*0.15
-            upper_b = avg+avg*0.15
-            d[d < lower_b] = np.nan
-            d[d > upper_b] = np.nan
+            lower_b = avg-avg*0.25
+            upper_b = avg+avg*0.25
+            d_copy = d.copy()
+            d[d_copy < lower_b] = np.nan
+            d[d_copy > upper_b] = np.nan
             # scale to range 0-1
             d_min = np.nanmin(d)
             d_max = np.nanmax(d)
@@ -104,6 +105,8 @@ def detectFaces(image, depth, boundary=(-0.05, 0.15)):
             # scale to range 0-1 again
             d_min = np.min(d)
             d_max = np.max(d)
+            if float(d_max-d_min) == 0:
+                continue
             d = (d-d_min) / (d_max-d_min)
             if np.isnan(np.sum(d)):
                 continue
