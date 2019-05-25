@@ -11,9 +11,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
     while True:
         received = sock.recv(1024)
         x = np.fromstring(received, dtype=np.float32)
-        if len(x) != 44:
+        if len(x) != 66:
             time.sleep(0.1)
             continue
-        x = x.reshape((22,2))
+        x = x.reshape((22,3))
         print(x)
         # TODO
