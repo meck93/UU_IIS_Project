@@ -1,10 +1,14 @@
 import socketserver
+
 import numpy as np
-from sources.camera import RealSenseCam
-from sources.dataset import Dataset
+
 from faceDetection import detectFaces
 from landmarkDetection import LandmarkDetector
+from sources.camera import RealSenseCam
+from sources.dataset import Dataset
 from visualization import initVisualization, updateVisualization, visualize
+
+
 class MyTCPHandler(socketserver.StreamRequestHandler):
     def handle(self):
         self.main()

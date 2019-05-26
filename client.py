@@ -1,5 +1,6 @@
 import socket
 import time
+
 import numpy as np
 
 HOST, PORT = "localhost", 9999
@@ -14,6 +15,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         if len(x) != 66:
             time.sleep(0.1)
             continue
-        x = x.reshape((22,3))
+        x = x.reshape((22, 3))
         print(x)
         # TODO
