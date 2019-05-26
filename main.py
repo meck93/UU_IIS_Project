@@ -1,13 +1,15 @@
-from sources.camera import RealSenseCam
-from sources.dataset import Dataset
 from faceDetection import detectFaces
 from landmarkDetection import LandmarkDetector
+from sources.camera import RealSenseCam
+from sources.dataset import Dataset
 from visualization import initVisualization, updateVisualization
 
-def main():
+
+def main(modelname):
     source = Dataset()  # for camera use RealsenseCam()
 
-    landmarkDetector = LandmarkDetector()
+    modelpath = "./datasets/models/{}/model.hdf5".format(modelname)
+    landmarkDetector = LandmarkDetector(modelpath)
 
     vis = initVisualization()
 
@@ -23,4 +25,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main("Test")

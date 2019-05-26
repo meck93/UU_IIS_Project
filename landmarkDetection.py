@@ -2,7 +2,7 @@ from keras.models import load_model
 from buildModel import avg_l2_dist, avg_l1_dist
 
 class LandmarkDetector():
-    def __init__(self, modelpath="./network.hdf5"):
+    def __init__(self, modelpath):
         self.l1_loss = {"avg_l1_dist": avg_l1_dist}
         self.l2_loss = {"avg_l2_dist": avg_l2_dist}
         self.model = load_model(modelpath, custom_objects=self.l2_loss)
