@@ -5,7 +5,7 @@ from landmarkDetection import LandmarkDetector
 from sources.camera import RealSenseCam
 from sources.dataset import Dataset
 from visualization import (initVisualization, updateVisualization,
-                           visualise_comparison)
+                           visualise_and_compare)
 
 
 def main(modelname, hasDepthData=True, l2_loss=True):
@@ -63,7 +63,7 @@ def compare_models(modelname1, modelname2, m1_depth, m2_depth, m1_l2_loss, m2_l2
         faces = faces[0, :, :, :]
 
         # visualize the predictions next to the true landmarks
-        visualise_comparison(faces, y_depth, y_no_depth)
+        visualise_and_compare(faces, y_depth, y_no_depth, "With Depth Data", "Without Depth Data")
 
 
 if __name__ == "__main__":
