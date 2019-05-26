@@ -53,10 +53,8 @@ def avg_l1_dist(y_true, y_pred):
     return avg
 
 def createModel(hasDepthData=True, l2_loss=True):
-    if hasDepthData:
-        in_shape = (2,128,128)
-    else:
-        in_shape = (1,128,128)
+    # check the input shape
+    in_shape = (2,128,128) if hasDepthData else (1,128,128)
 
     model = Sequential()
 
