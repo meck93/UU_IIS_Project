@@ -88,3 +88,31 @@ def visualise_and_compare(x, y1, y2, title1, title2, plot_landmarks=True, annota
             plt.annotate(label, (y2[i, 0], y2[i, 1]), color="white", fontsize="small")
 
     plt.show()
+
+
+def visualise_bulat(x, our_pred, image, bulat_pred, title1, title2, plot_landmarks=True):
+    # plot the RGB image
+    fig = plt.figure()
+    ax1 = fig.add_subplot(1, 2, 1)
+    ax1.set_title(title1, fontsize=30)
+    ax1.set_ylim(128,0)
+    ax1.set_xlim(0,128)
+    ax1.imshow(x[0, :, :], cmap="gray")
+    ax1.tick_params(axis='both', which='major', labelsize=30)
+    our_pred *= 128
+    our_pred = our_pred.reshape((22, 2))
+
+    if plot_landmarks:  # plot facial landmarks as points
+        ax1.scatter(our_pred[:, 0], our_pred[:, 1], s=90, c="red", alpha=1.0, edgecolor="black")
+
+    ax2 = fig.add_subplot(1, 2, 2)
+    ax2.set_title(title2, fontsize=30)
+    ax2.set_ylim(image.shape[0], 0)
+    ax2.set_xlim(0, image.shape[1])
+    ax2.imshow(image)
+    ax2.tick_params(axis='both', which='major', labelsize=30)
+
+    if plot_landmarks:  # plot facial landmarks as points
+        ax2.scatter(bulat_pred[:, 0], bulat_pred[:, 1], s=50, c="red", alpha=1.0, edgecolor="black")
+
+    plt.show()

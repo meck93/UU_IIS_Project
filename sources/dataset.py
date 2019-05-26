@@ -6,7 +6,7 @@ import pandas as pd
 
 
 class Dataset(Source):
-    def __init__(self, path='./datasets/self_created/dataset/'):
+    def __init__(self, path='./datasets/self_created/dataset2/'):
         self.path = path
         self.i = 0
         if not os.path.isfile(self.path + "frames_used.csv"):
@@ -33,7 +33,7 @@ class Dataset(Source):
             # restart
             self.i = 0
             return self.getFrame()
-        self.i += 1
+        self.i += 40
         return image, depth
 
     def convertRowStringToCoordinates(self, string):
