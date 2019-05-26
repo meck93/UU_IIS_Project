@@ -2,12 +2,20 @@ from keras.models import load_model
 from buildModel import avg_l2_dist, avg_l1_dist
 
 class LandmarkDetector():
-    def __init__(self, modelpath="./network.hdf5"):
+    def __init__(self, modelpath="./network.hdf5", hasDepthData=True, l2_loss=True):
         self.l1_loss = {"avg_l1_dist": avg_l1_dist}
         self.l2_loss = {"avg_l2_dist": avg_l2_dist}
-        self.model = load_model(modelpath, custom_objects=self.l2_loss)
+        self.hasDepthData = hasDepthData
+
+        if l2_loss:
+            self.model = load_model(modelpath, custom_objects=self.l2_loss)
+        else:
+            self.model = load_model(modelpath, custom_objects=self.l1_loss)
 
     def detectLandmarks(self, input_vector):
-        if input_vector.shape != (1,2,128,128):
+        if self.hasDepthData and input_vector.shape == (1,2,128,128): # grayscale and depth input
+            return self.model.predict(input_vector)
+        elif not self.hasDepthData and input_vector.shape == (1,1,128,128): # only grayscale input
+            return self.model.predict(input_vector)
+        else:
             return []
-        return self.model.predict(input_vector)
