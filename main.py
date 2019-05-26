@@ -11,7 +11,7 @@ from visualization import (initVisualization, updateVisualization,
 def main(modelname, hasDepthData=True, l2_loss=True):
     source = Dataset()  # for camera use RealsenseCam()
 
-    modelpath = "./models/{}/model.hdf5".format(modelname)
+    modelpath = "./datasets/models/{}/model.hdf5".format(modelname)
     landmarkDetector = LandmarkDetector(modelpath, hasDepthData, l2_loss)
 
     vis = initVisualization(hasDepthData)
@@ -38,10 +38,10 @@ def compare_models(modelname1, modelname2, m1_depth, m2_depth, m1_l2_loss, m2_l2
     source = Dataset()  # for camera use RealsenseCam()
 
     # load both models
-    modelpath1 = "./models/{}/model.hdf5".format(modelname1)
+    modelpath1 = "./datasets/models/{}/model.hdf5".format(modelname1)
     model_depth = LandmarkDetector(modelpath1, m1_depth, m1_l2_loss)
 
-    modelpath2 = "./models/{}/model.hdf5".format(modelname2)
+    modelpath2 = "./datasets/models/{}/model.hdf5".format(modelname2)
     model_no_depth = LandmarkDetector(modelpath2, m2_depth, m2_l2_loss)
 
     while True:

@@ -190,7 +190,7 @@ def train_model(name, val_metric, plot_graph=False):
     tb = TensorBoard(update_freq="batch", log_dir="./logs/{}/".format(name))
     early = EarlyStopping(monitor=val_metric, patience=9, restore_best_weights=True)
     reduce_lr = ReduceLROnPlateau(monitor=val_metric, verbose=True, factor=0.5, patience=4)
-    cp = ModelCheckpoint(filepath="./models/{}/model.hdf5".format(name), monitor=val_metric, verbose=True, save_best_only=True)
+    cp = ModelCheckpoint(filepath="./datasets/models/{}/model.hdf5".format(name), monitor=val_metric, verbose=True, save_best_only=True)
 
     # train the model
     history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=40,
@@ -223,7 +223,7 @@ def use_pretrained_model(name, custom_loss_name, plot_graph=False):
 
     # load a trained model from file
     # TODO: make sure you use the correct custom loss function
-    model = load_model("./network.hdf5", custom_objects={custom_loss_name: avg_l1_dist})
+    model = load_model("./datasets/models/{}/model.hdf5".format(name), custom_objects={custom_loss_name: avg_l1_dist})
 
     while True:
         i = random.randint(0, X_test.shape[0]-1)
