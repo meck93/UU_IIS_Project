@@ -31,3 +31,5 @@ LANDMARK_MAPPING = {
     'Upper lip inner middle': 62,
     'Upper lip outer middle': 51
 }
+
+BEST_MODEL_PATH = "./datasets/models/Aug4L2Drop0.05GrayOnly_V2/model.hdf5"
