@@ -15,3 +15,4 @@ Uppsala University - Intelligent Interactive System Project
 - `visualizaion.py` contains methods for visualization.
 - The folder `sources` contains the code to read the Bosphorus dataset, read from the realsense camera and read our dataset.
 - The folder `landmarkdetect_bulat` contains the advanced landmark detection method by Bulat et al.
+- to setup the networking for the live demonstration of the pipeline, run `server.py`. `client.py` contains a dummy client that was provided to the ML group.
