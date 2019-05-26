@@ -52,33 +52,32 @@ def avg_l1_dist(y_true, y_pred):
     avg = K.mean(z, axis=None, keepdims=False)
     return avg
 
-def getModel():
+def createModel(hasDepthData=True, l2_loss=True):
+    if hasDepthData:
+        in_shape = (2,128,128)
+    else:
+        in_shape = (1,128,128)
+
     model = Sequential()
 
     # 1st convolutional layer
-    model.add(Conv2D(filters=32, kernel_size=(3, 3), strides=(1, 1), padding="same", kernel_initializer="he_normal",
-                     input_shape=(2, 128, 128), data_format="channels_first"))
-    model.add(Activation("relu"))
-    model.add(Conv2D(filters=32, kernel_size=(3, 3), strides=(1, 1), padding="same"))
-    model.add(Activation("relu"))
-    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid"))
-    model.add(Dropout(rate=0.0))
+    model.add(Conv2D(filters=32, kernel_size=(3, 3), activation="relu", padding="same", kernel_initializer="he_normal",
+                     input_shape=in_shape, data_format="channels_first"))
+    model.add(Conv2D(filters=32, kernel_size=(3, 3), activation="relu", padding="same", data_format="channels_first"))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid", data_format="channels_first"))
+    model.add(Dropout(rate=0.05))
 
     # 2nd convolutional layer
-    model.add(Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1), padding="same"))
-    model.add(Activation("relu"))
-    model.add(Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1), padding="same"))
-    model.add(Activation("relu"))
-    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid"))
-    model.add(Dropout(rate=0.0))
+    model.add(Conv2D(filters=64, kernel_size=(3, 3), activation="relu", padding="same", data_format="channels_first"))
+    model.add(Conv2D(filters=64, kernel_size=(3, 3), activation="relu", padding="same", data_format="channels_first"))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid", data_format="channels_first"))
+    model.add(Dropout(rate=0.05))
 
     # 3rd convolutional layer
-    model.add(Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), padding="same"))
-    model.add(Activation("relu"))
-    model.add(Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), padding="same"))
-    model.add(Activation("relu"))
-    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid"))
-    model.add(Dropout(rate=0.0))
+    model.add(Conv2D(filters=128, kernel_size=(3, 3), activation="relu", padding="same", data_format="channels_first"))
+    model.add(Conv2D(filters=128, kernel_size=(3, 3), activation="relu", padding="same", data_format="channels_first"))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid", data_format="channels_first"))
+    model.add(Dropout(rate=0.05))
 
     # flatten output
     model.add(Flatten())
@@ -90,8 +89,10 @@ def getModel():
     model.add(Dense(44))
 
     # compile the model with Adam optimizer + use custom metric as loss and metric
-    # TODO: experiment with "MSE" loss and custom metric + custom metric as loss & metric
-    model.compile(optimizer=keras.optimizers.Adam(), loss=avg_l1_dist, metrics=["acc", avg_l1_dist])
+    if l2_loss:
+        model.compile(optimizer=keras.optimizers.Adam(), loss=avg_l2_dist, metrics=["acc", avg_l2_dist])
+    else:
+        model.compile(optimizer=keras.optimizers.Adam(), loss=avg_l1_dist, metrics=["acc", avg_l1_dist])
 
     print(model.summary())
     return model
@@ -165,18 +166,32 @@ def getFeatureVector(id):
     return x, y
 
 
-def train_model(name, val_metric, plot_graph=False):
+def _check_dir_or_create(filepath):
+    if not os.path.exists(filepath):
+        os.makedirs(filepath)
+
+
+def train_model(name, plot_graph=False, hasDepthData=True, l2_loss=True):
     # build model
-    model = getModel()
+    model = createModel(hasDepthData, l2_loss)
 
     # retrieve dataset
     X, y = getDataset()
 
     # split into train and tests
-    # TODO: think about stratifying according to the 6 basic emotions
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
+    # augment the training data set
     X_aug, y_aug = getAugmentedDataset(X_train, y_train)
+
+    # drop the depth channel - only use the grayscale information
+    if not hasDepthData:
+        X_test = X_test[:,0,:,:]
+        X_test = np.expand_dims(X_test, axis=1)
+        X_train = X_train[:,0,:,:]
+        X_train = np.expand_dims(X_train, axis=1)
+        X_aug = X_aug[:,0,:,:]
+        X_aug = np.expand_dims(X_aug, axis=1)
 
     X_train = np.concatenate([X_train, X_aug])
     y_train = np.concatenate([y_train, y_aug])
@@ -186,15 +201,21 @@ def train_model(name, val_metric, plot_graph=False):
     print(y_train.shape)
     print(y_test.shape)
 
-    # set up different callbacks
+    # setup the correct validation metric
+    val_metric = "val_avg_l2_dist" if l2_loss else "val_avg_l1_dist"
+
+    # set up tensorboard, early stopping and learning rate reducer as callbacks
     tb = TensorBoard(update_freq="batch", log_dir="./logs/{}/".format(name))
-    early = EarlyStopping(monitor=val_metric, patience=9, restore_best_weights=True)
-    reduce_lr = ReduceLROnPlateau(monitor=val_metric, verbose=True, factor=0.5, patience=4)
+    reduce_lr = ReduceLROnPlateau(monitor=val_metric, verbose=True, factor=0.5, patience=3)
+
+    # setup checkpoint callback
+    cp_filepath = "./models/{}/".format(name)
+    _check_dir_or_create(cp_filepath)
     cp = ModelCheckpoint(filepath="./models/{}/model.hdf5".format(name), monitor=val_metric, verbose=True, save_best_only=True)
 
     # train the model
     history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=40,
-                        batch_size=32, callbacks=[tb, early, reduce_lr, cp], verbose=True)
+                        batch_size=32, callbacks=[tb, reduce_lr, cp], verbose=True)
 
     if plot_graph:
         # summarize history for avg_l2_dist
@@ -211,9 +232,10 @@ def train_model(name, val_metric, plot_graph=False):
         y_pred = model.predict(np.asarray([X_test[i]]))  # predict the facial landmarks
         visualize_prediction(X_test[i], y_pred, y_test[i])  # visualize the predictions next to the true landmarks
 
-def use_pretrained_model(name, custom_loss_name, plot_graph=False):
+
+def use_pretrained_model(name, hasDepthData=True, l2_loss=True):
     # build model
-    model = getModel()
+    model = createModel(hasDepthData, l2_loss)
 
     # retrieve dataset
     X, y = getDataset()
@@ -221,9 +243,16 @@ def use_pretrained_model(name, custom_loss_name, plot_graph=False):
     # split into train and tests
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+    # drop the depth channel - only use the grayscale information
+    if not hasDepthData:
+        X_test = X_test[:, 0, :, :]
+        X_test = np.expand_dims(X_test, axis=1)
+
     # load a trained model from file
-    # TODO: make sure you use the correct custom loss function
-    model = load_model("./network.hdf5", custom_objects={custom_loss_name: avg_l1_dist})
+    if l2_loss:
+        model = load_model("./models/{}/model.hdf5".format(name), custom_objects={"avg_l2_dist": avg_l2_dist})
+    else:
+        model = load_model("./models/{}/model.hdf5".format(name), custom_objects={"avg_l1_dist": avg_l1_dist})
 
     while True:
         i = random.randint(0, X_test.shape[0]-1)
@@ -231,5 +260,5 @@ def use_pretrained_model(name, custom_loss_name, plot_graph=False):
         visualize_prediction(X_test[i], y_pred, y_test[i])  # visualize the predictions next to the true landmarks
 
 if __name__ == "__main__":
-    # use_pretrained_model("L1Test", "avg_l1_dist")
-    train_model("L1Test", val_metric="val_avg_l1_dist")
+    # use_pretrained_model("", hasDepthData=True, l2_loss=True)
+    train_model("ReplaceMeWithModelName", plot_graph=True, hasDepthData=True, l2_loss=True)
