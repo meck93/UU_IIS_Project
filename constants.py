@@ -32,5 +32,7 @@ LANDMARK_MAPPING = {
     'Upper lip outer middle': 51
 }
 
+CV2_PATH = "C:/Users/meck/.conda/envs/iis/Library/etc/haarcascades/"
+FACE_CASCADE_PATH = CV2_PATH + 'haarcascade_frontalface_default.xml'
 BEST_MODEL_NAME = "Aug4L2Drop0.05"
 BEST_MODEL_ISL2LOSS = True

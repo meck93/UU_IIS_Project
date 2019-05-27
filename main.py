@@ -1,5 +1,4 @@
 import numpy as np
-
 from faceDetection import detectFaces
 from landmarkDetection import LandmarkDetector
 from sources.camera import RealSenseCam
