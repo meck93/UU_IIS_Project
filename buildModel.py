@@ -13,10 +13,11 @@ from keras.models import Sequential, load_model
 from sklearn.model_selection import train_test_split
 
 import cv2 as cv
+from augment import getAugmentedDataset
 from constants import FACIAL_LANDMARKS
 from sources import readBosphorus
-from augment import getAugmentedDataset
-from visualization import visualize_prediction
+from visualization import visualise_and_compare
+
 
 def avg_l2_dist(y_true, y_pred):
     """
@@ -227,8 +228,12 @@ def train_model(name, plot_graph=False, hasDepthData=True, l2_loss=True):
 
     while True:
         i = random.randint(0, X_test.shape[0]-1)
-        y_pred = model.predict(np.asarray([X_test[i]]))  # predict the facial landmarks
-        visualize_prediction(X_test[i], y_pred, y_test[i])  # visualize the predictions next to the true landmarks
+
+        # predict the facial landmarks
+        y_pred = model.predict(np.asarray([X_test[i]]))  
+
+        # visualize the predictions next to the true landmarks
+        visualise_and_compare(X_test[i], y_pred, y_test[i], "Predicted Landmarks", "True Landmarks")  
 
 
 def use_pretrained_model(name, hasDepthData=True, l2_loss=True):
@@ -254,9 +259,14 @@ def use_pretrained_model(name, hasDepthData=True, l2_loss=True):
 
     while True:
         i = random.randint(0, X_test.shape[0]-1)
-        y_pred = model.predict(np.asarray([X_test[i]]))  # predict the facial landmarks
-        visualize_prediction(X_test[i], y_pred, y_test[i])  # visualize the predictions next to the true landmarks
 
+        # predict the facial landmarks
+        y_pred = model.predict(np.asarray([X_test[i]]))  
+
+        # visualize the predictions next to the true landmarks
+        visualise_and_compare(X_test[i], y_pred, y_test[i], "Predicted Landmarks", "True Landmarks")
+
+        
 if __name__ == "__main__":
     # use_pretrained_model("", hasDepthData=True, l2_loss=True)
     train_model("Name", plot_graph=True, hasDepthData=True, l2_loss=True)
