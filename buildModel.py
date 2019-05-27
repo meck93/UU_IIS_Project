@@ -63,19 +63,19 @@ def createModel(hasDepthData=True, l2_loss=True):
                      input_shape=in_shape, data_format="channels_first"))
     model.add(Conv2D(filters=32, kernel_size=(3, 3), activation="relu", padding="same", data_format="channels_first"))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid", data_format="channels_first"))
-    model.add(Dropout(rate=0.05))
+    model.add(Dropout(rate=0.1))
 
     # 2nd convolutional layer
     model.add(Conv2D(filters=64, kernel_size=(3, 3), activation="relu", padding="same", data_format="channels_first"))
     model.add(Conv2D(filters=64, kernel_size=(3, 3), activation="relu", padding="same", data_format="channels_first"))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid", data_format="channels_first"))
-    model.add(Dropout(rate=0.05))
+    model.add(Dropout(rate=0.1))
 
     # 3rd convolutional layer
     model.add(Conv2D(filters=128, kernel_size=(3, 3), activation="relu", padding="same", data_format="channels_first"))
     model.add(Conv2D(filters=128, kernel_size=(3, 3), activation="relu", padding="same", data_format="channels_first"))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="valid", data_format="channels_first"))
-    model.add(Dropout(rate=0.05))
+    model.add(Dropout(rate=0.1))
 
     # flatten output
     model.add(Flatten())
@@ -207,9 +207,9 @@ def train_model(name, plot_graph=False, hasDepthData=True, l2_loss=True):
     reduce_lr = ReduceLROnPlateau(monitor=val_metric, verbose=True, factor=0.5, patience=3)
 
     # setup checkpoint callback
-    cp_filepath = "./models/{}/".format(name)
+    cp_filepath = "./datasets/models/{}/".format(name)
     _check_dir_or_create(cp_filepath)
-    cp = ModelCheckpoint(filepath="./models/{}/model.hdf5".format(name), monitor=val_metric, verbose=True, save_best_only=True)
+    cp = ModelCheckpoint(filepath="./datasets/models/{}/model.hdf5".format(name), monitor=val_metric, verbose=True, save_best_only=True)
 
     # train the model
     history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=40,
@@ -248,9 +248,9 @@ def use_pretrained_model(name, hasDepthData=True, l2_loss=True):
 
     # load a trained model from file
     if l2_loss:
-        model = load_model("./models/{}/model.hdf5".format(name), custom_objects={"avg_l2_dist": avg_l2_dist})
+        model = load_model("./datasets/models/{}/model.hdf5".format(name), custom_objects={"avg_l2_dist": avg_l2_dist})
     else:
-        model = load_model("./models/{}/model.hdf5".format(name), custom_objects={"avg_l1_dist": avg_l1_dist})
+        model = load_model("./datasets/models/{}/model.hdf5".format(name), custom_objects={"avg_l1_dist": avg_l1_dist})
 
     while True:
         i = random.randint(0, X_test.shape[0]-1)
@@ -259,4 +259,4 @@ def use_pretrained_model(name, hasDepthData=True, l2_loss=True):
 
 if __name__ == "__main__":
     # use_pretrained_model("", hasDepthData=True, l2_loss=True)
-    train_model("ReplaceMeWithModelName", plot_graph=True, hasDepthData=True, l2_loss=True)
+    train_model("Name", plot_graph=True, hasDepthData=True, l2_loss=True)

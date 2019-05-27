@@ -31,3 +31,6 @@ LANDMARK_MAPPING = {
     'Upper lip inner middle': 62,
     'Upper lip outer middle': 51
 }
+
+CV2_PATH = "C:/Users/meck/.conda/envs/iis/Library/etc/haarcascades/"
+FACE_CASCADE_PATH = CV2_PATH + 'haarcascade_frontalface_default.xml'
