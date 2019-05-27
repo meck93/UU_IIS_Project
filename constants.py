@@ -31,3 +31,6 @@ LANDMARK_MAPPING = {
     'Upper lip inner middle': 62,
     'Upper lip outer middle': 51
 }
+
+BEST_MODEL_NAME = "Aug4L2Drop0.05"
+BEST_MODEL_ISL2LOSS = True
