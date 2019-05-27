@@ -4,32 +4,24 @@ import numpy as np
 from constants import FACIAL_LANDMARKS
 
 
-def initVisualization(hasDepthData):
-    ax1 = plt.subplot(1, 2, 1)    
+def initVisualization():
+    ax1 = plt.subplot(1, 2, 1)
+    ax2 = plt.subplot(1, 2, 2)
     im1 = ax1.imshow(np.zeros((128,128)), cmap='gray', vmin=0, vmax=1)
-    sc = ax1.scatter([], [], s=20, c="red", alpha=1.0, edgecolor="black")
-
-    if hasDepthData:
-        ax2 = plt.subplot(1, 2, 2)
-        im2 = ax2.imshow(np.zeros((128,128)), cmap='gray', vmin=0, vmax=1)
-        plt.ion() # interactive mode on
-        return im1, im2, sc
-    else:
-        plt.ion()  # interactive mode on
-        return im1, None, sc
+    im2 = ax2.imshow(np.zeros((128,128)), cmap='gray', vmin=0, vmax=1)
+    sc = ax1.scatter([],[], s=20, c="red", alpha=1.0, edgecolor="black")
+    plt.ion() # interactive mode on
+    return im1, im2, sc
 
 
-def updateVisualization(x, y, vis, hasDepthData):
+def updateVisualization(x, y, vis):
     im1, im2, sc = vis
     im1.set_data(x[0, :, :])
     y = y.copy()
     y *= 128
     y = y.reshape((22, 2))
     sc.set_offsets(y)
-    
-    if hasDepthData:
-        im2.set_data(x[1, :, :])
-        
+    im2.set_data(x[1, :, :])
     plt.pause(0.1)
 
 

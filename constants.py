@@ -32,4 +32,5 @@ LANDMARK_MAPPING = {
     'Upper lip outer middle': 51
 }
 
-BEST_MODEL_PATH = "./datasets/models/Aug4L2Drop0.05GrayOnly_V2/model.hdf5"
+BEST_MODEL_NAME = "Aug4L2Drop0.05"
+BEST_MODEL_ISL2LOSS = True
