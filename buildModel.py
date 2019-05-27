@@ -13,10 +13,11 @@ from keras.models import Sequential, load_model
 from sklearn.model_selection import train_test_split
 
 import cv2 as cv
+from augment import getAugmentedDataset
 from constants import FACIAL_LANDMARKS
 from sources import readBosphorus
-from augment import getAugmentedDataset
-from visualization import visualize_prediction
+from visualization import visualise_and_compare
+
 
 def avg_l2_dist(y_true, y_pred):
     """
@@ -190,7 +191,7 @@ def train_model(name, val_metric, plot_graph=False):
     tb = TensorBoard(update_freq="batch", log_dir="./logs/{}/".format(name))
     early = EarlyStopping(monitor=val_metric, patience=9, restore_best_weights=True)
     reduce_lr = ReduceLROnPlateau(monitor=val_metric, verbose=True, factor=0.5, patience=4)
-    cp = ModelCheckpoint(filepath="./models/{}/model.hdf5".format(name), monitor=val_metric, verbose=True, save_best_only=True)
+    cp = ModelCheckpoint(filepath="./datasets/models/{}/model.hdf5".format(name), monitor=val_metric, verbose=True, save_best_only=True)
 
     # train the model
     history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=40,
@@ -208,8 +209,12 @@ def train_model(name, val_metric, plot_graph=False):
 
     while True:
         i = random.randint(0, X_test.shape[0]-1)
-        y_pred = model.predict(np.asarray([X_test[i]]))  # predict the facial landmarks
-        visualize_prediction(X_test[i], y_pred, y_test[i])  # visualize the predictions next to the true landmarks
+
+        # predict the facial landmarks
+        y_pred = model.predict(np.asarray([X_test[i]]))  
+
+        # visualize the predictions next to the true landmarks
+        visualise_and_compare(X_test[i], y_pred, y_test[i], "Predicted Landmarks", "True Landmarks")  
 
 def use_pretrained_model(name, custom_loss_name, plot_graph=False):
     # build model
@@ -222,14 +227,18 @@ def use_pretrained_model(name, custom_loss_name, plot_graph=False):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # load a trained model from file
-    # TODO: make sure you use the correct custom loss function
-    model = load_model("./network.hdf5", custom_objects={custom_loss_name: avg_l1_dist})
+    model = load_model("./datasets/models/{}/model.hdf5".format(name), custom_objects={custom_loss_name: avg_l1_dist})
 
     while True:
         i = random.randint(0, X_test.shape[0]-1)
-        y_pred = model.predict(np.asarray([X_test[i]]))  # predict the facial landmarks
-        visualize_prediction(X_test[i], y_pred, y_test[i])  # visualize the predictions next to the true landmarks
 
+        # predict the facial landmarks
+        y_pred = model.predict(np.asarray([X_test[i]]))  
+
+        # visualize the predictions next to the true landmarks
+        visualise_and_compare(X_test[i], y_pred, y_test[i], "Predicted Landmarks", "True Landmarks")
+
+        
 if __name__ == "__main__":
     # use_pretrained_model("L1Test", "avg_l1_dist")
     train_model("L1Test", val_metric="val_avg_l1_dist")
