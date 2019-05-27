@@ -14,7 +14,7 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
         self.main()
 
     def main(self):
-        source = Dataset()  # for camera use RealsenseCam()
+        source = RealSenseCam()  # for camera use RealsenseCam()
 
         landmarkDetector = LandmarkDetector()
 
@@ -34,8 +34,8 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
                 landmarks = l.copy().reshape((22,2))
                 data = []
                 for x, y in landmarks:
-                    x_ = int(round(x*128))
-                    y_ = int(round(y*128))
+                    x_ = min(int(round(x*128)), 128)
+                    y_ = min(int(round(y*128)), 128)
                     z = f[1,x_,y_]
                     data.append([x, y, z])
                 data = np.asarray(data, dtype=np.float32)
@@ -44,6 +44,6 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
 
 
 if __name__ == "__main__":
-    HOST, PORT = "localhost", 9999
+    HOST, PORT = "192.168.43.156", 9999
     with socketserver.TCPServer((HOST, PORT), MyTCPHandler) as server:
         server.serve_forever()
