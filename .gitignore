@@ -1,9 +1,6 @@
 # our stuff
-datasets/bosphorus
+datasets/
 
-# ignore all RGB and Depth images but track landmarks
-datasets/self_created/dataset*/*.png
-!datasets/self_created/dataset/*.csv
 
 # 
 !model_evaluation/Dropout0.0/trained_network.hdf5

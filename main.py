@@ -8,7 +8,7 @@ from visualization import (initVisualization, updateVisualization,
 from constants import BEST_MODEL_NAME, BEST_MODEL_ISL2LOSS
 
 def main(modelname=BEST_MODEL_NAME, hasDepthData=True, l2_loss=BEST_MODEL_ISL2LOSS):
-    source = Dataset()  # for camera use RealsenseCam()
+    source = RealSenseCam()  # for camera use RealsenseCam()
 
     landmarkDetector = LandmarkDetector(modelname, hasDepthData, l2_loss)
 
@@ -52,6 +52,4 @@ def compare_models(modelname1, modelname2, m1_depth, m2_depth, m1_l2_loss, m2_l2
 
 
 if __name__ == "__main__":
-    # main("Aug4L2Drop0.05", hasDepthData=True, l2_loss=True)
-    # compare_models("Aug4L2Drop0.05_V2", "Aug4L2Drop0.05GrayOnly_V2", m1_depth=True, m2_depth=False, m1_l2_loss=True, m2_l2_loss=True)
     main()
